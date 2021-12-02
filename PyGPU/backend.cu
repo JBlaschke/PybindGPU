@@ -1,9 +1,44 @@
 #include <cuda_hip_wrapper.h>
 #include <pybind11/pybind11.h>
 
+#include <set>
+
+#define FOLD_EXPRESSION(...) \
+    ::consume_parameters(::std::initializer_list<int>{(__VA_ARGS__, 0)...})
+
+// TODO: these are from the PyKokkos source code -- and they need to be
+// documented
+
+#define GET_FIRST_STRING(...)                             \
+    static std::string _value = []() {                    \
+        return std::get<0>(std::make_tuple(__VA_ARGS__)); \
+    }();                                                  \
+    return _value
+
+#define GET_STRING_SET(...)                                    \
+    static auto _value = []() {                                \
+        auto _ret = std::set<std::string>{};                   \
+        for (auto itr : std::set<std::string>{__VA_ARGS__}) {  \
+            if (!itr.empty()) {                                \
+            _ret.insert(itr);                                  \
+            }                                                  \
+        }                                                      \
+        return _ret;                                           \
+    }();                                                       \
+    return _value
+
+#define DATA_TYPE(TYPE, ENUM_ID, ...)                                 \
+    template <>                                                       \
+    struct DataTypeSpecialization<ENUM_ID> {                          \
+        using type = TYPE;                                            \
+        static std::string label() { GET_FIRST_STRING(__VA_ARGS__); } \
+        static const auto& labels() { GET_STRING_SET(__VA_ARGS__); }  \
+    };
 
 namespace py = pybind11;
 
+template <typename... Args>
+void consume_parameters(Args &&...) {}
 
 template <class T> class ptr_wrapper {
     public:
@@ -21,7 +56,114 @@ template <class T> class ptr_wrapper {
 };
 
 
+enum DataType {
+    Int16 = 0,
+    Int32 = 1,
+    Int64 = 2,
+    UInt16 = 3,
+    UInt32 = 4,
+    UInt64 = 5,
+    Float32= 6,
+    Float64= 7,
+    DataTypesEnd = 8
+};
+
+
+template <size_t data_type>
+struct DataTypeSpecialization;
+
+// template <>
+// struct DataTypeSpecialization<Int16> {
+//     using type = int16_t;
+//     static std::string label() {return "int16";}
+// };
+// 
+// template <>
+// struct DataTypeSpecialization<Int32> {
+//     using type = int32_t;
+//     static std::string label() {return "int32";}
+// };
+// 
+// template <>
+// struct DataTypeSpecialization<Int64> {
+//     using type = int64_t;
+//     static std::string label() {return "int64";}
+// };
+// 
+// template <>
+// struct DataTypeSpecialization<UInt16> {
+//     using type = uint16_t;
+//     static std::string label() {return "uint16";}
+// };
+// 
+// template <>
+// struct DataTypeSpecialization<UInt32> {
+//     using type = uint32_t;
+//     static std::string label() {return "uint32";}
+// };
+// 
+// template <>
+// struct DataTypeSpecialization<UInt64> {
+//     using type = uint64_t;
+//     static std::string label() {return "uint64";}
+// };
+// 
+// template <>
+// struct DataTypeSpecialization<Float> {
+//     using type = float;
+//     static std::string label() {return "float";}
+// };
+// 
+// template <>
+// struct DataTypeSpecialization<Double> {
+//     using type = double;
+//     static std::string label() {return "double";}
+// };
+
+
+//----------------------------------------------------------------------------//
+// <data-type> <enum> <string identifiers>
+//  the first string identifier is the "canonical name" (i.e. what gets encoded)
+//  and the remaining string entries are used to generate aliases
+//
+DATA_TYPE(int16_t, Int16, "int16", "short")
+DATA_TYPE(int32_t, Int32, "int32", "int")
+DATA_TYPE(int64_t, Int64, "int64", "long")
+DATA_TYPE(uint16_t, UInt16, "uint16", "unsigned_short")
+DATA_TYPE(uint32_t, UInt32, "uint32", "unsigned", "unsigned_int")
+DATA_TYPE(uint64_t, UInt64, "uint64", "unsigned_long")
+DATA_TYPE(float, Float32, "float32", "float")
+DATA_TYPE(double, Float64, "float64", "double")
+
+
+template <template <size_t> class SpecT, typename Tp, size_t ... Idx>
+void generate_enumeration(
+        py::enum_<Tp> & _enum, std::index_sequence<Idx...>
+    ) {
+        auto _generate = [& _enum](const auto & _labels, Tp _idx) {
+            for (const auto & itr : _labels) {
+                assert(!itr.empty());
+                _enum.value(itr.c_str(), _idx);
+            }
+        };
+
+        FOLD_EXPRESSION(_generate(SpecT<Idx>::labels(), static_cast<Tp>(Idx)));
+}
+
+
+void generate_enumeration(py::module & _mod) {
+    py::enum_<DataType> _dtype(_mod, "dtype", "Raw data types");
+    _dtype.export_values();
+    generate_enumeration<DataTypeSpecialization>(
+        _dtype,
+        std::make_index_sequence<DataTypesEnd>{}
+    );
+}
+
+
+
 PYBIND11_MODULE(backend, m) {
+    generate_enumeration(m);
     // TODO: this is a clumsy way to define data types -- clean this up a wee
     // bit in the future.
     py::class_<ptr_wrapper<int>>(m, "Int_t");
