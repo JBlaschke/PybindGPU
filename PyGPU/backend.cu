@@ -25,14 +25,21 @@ template <class T> class ptr_wrapper {
 
 enum DataType {
     Int16 = 0,
-    Int32 = 1,
-    Int64 = 2,
-    UInt16 = 3,
-    UInt32 = 4,
-    UInt64 = 5,
-    Float32= 6,
-    Float64= 7,
-    DataTypesEnd = 8
+    Int32,
+    Int64,
+    UInt16,
+    UInt32,
+    UInt64,
+    Float32,
+    Float64,
+    DataTypesEnd
+};
+
+struct CudaError {
+    cudaError_t error_code;
+    CudaError(cudaError_t a_error) : error_code(a_error) {}
+    CudaError(int a_error) : error_code(static_cast<cudaError_t>(a_error)) {}
+    int as_int() const {return static_cast<int>(error_code);}
 };
 
 
@@ -78,7 +85,18 @@ void generate_enumeration(py::module & _mod) {
 
 
 PYBIND11_MODULE(backend, m) {
+
+    // Build all enumerations used internally by cuda bindings
     generate_enumeration(m);
+
+    py::class_<CudaError>(m, "cudaError_t")
+        .def(py::init<int>())
+        .def("as_int", & CudaError::as_int)
+        .def("__repr__",
+            [](const CudaError & a) {
+                return "<CudaError: 'code=" + std::to_string(a.as_int()) + "'>";
+            }
+        );
 
     // TODO: this is a clumsy way to define data types -- clean this up a wee
     // bit in the future.
@@ -125,13 +143,10 @@ PYBIND11_MODULE(backend, m) {
     );
 
 
-
-
     m.def(
         "cudaDeviceReset",
         []() {
-            // TODO: use custom type for cudaError_t
-            return (int64_t) cudaDeviceReset();
+            return CudaError(cudaDeviceReset());
         }
     );
 
@@ -139,8 +154,7 @@ PYBIND11_MODULE(backend, m) {
     m.def(
         "cudaDeviceSynchronize",
         []() {
-            // TODO: use custom type for cudaError_t
-            return (int64_t) cudaDeviceSynchronize();
+            return CudaError(cudaDeviceSynchronize());
         }
     );
 
@@ -148,8 +162,7 @@ PYBIND11_MODULE(backend, m) {
     m.def(
         "cudaEventCreate",
         [](ptr_wrapper<cudaEvent_t> event, unsigned int flags) {
-            // TODO: use custom type for cudaError_t
-            return (int64_t) cudaEventCreate(event.get(), flags);
+            return CudaError(cudaEventCreate(event.get(), flags));
         }
     );
 
@@ -161,8 +174,7 @@ PYBIND11_MODULE(backend, m) {
             ptr_wrapper<cudaEvent_t> start,
             ptr_wrapper<cudaEvent_t> end
         ) {
-            // TODO: use custom type for cudaError_t
-            return (int64_t) cudaEventElapsedTime(ms.get(), * start, * end);
+            return CudaError(cudaEventElapsedTime(ms.get(), * start, * end));
         }
     );
 
@@ -173,8 +185,7 @@ PYBIND11_MODULE(backend, m) {
             ptr_wrapper<cudaEvent_t> event,
             ptr_wrapper<cudaStream_t> end = 0
         ) {
-            // TODO: use custom type for cudaError_t
-            return (int64_t) cudaEventRecord(* event, * end);
+            return CudaError(cudaEventRecord(* event, * end));
         }
     );
 
@@ -182,8 +193,7 @@ PYBIND11_MODULE(backend, m) {
     m.def(
         "cudaEventSynchronize",
         [](ptr_wrapper<cudaEvent_t> event) {
-            // TODO: use custom type for cudaError_t
-            return (int64_t) cudaEventSynchronize(* event);
+            return CudaError(cudaEventSynchronize(* event));
         }
     );
 
@@ -191,8 +201,7 @@ PYBIND11_MODULE(backend, m) {
     m.def(
         "cudaFree",
         [](void * dev_ptr) {
-            // TODO: use custom type for cudaError_t
-            return (int64_t) cudaFree(dev_ptr);
+            return CudaError(cudaFree(dev_ptr));
         }
     );
 
@@ -200,8 +209,7 @@ PYBIND11_MODULE(backend, m) {
     m.def(
         "cudaFreeHost",
         [](void * ptr) {
-            // TODO: use custom type for cudaError_t
-            return (int64_t) cudaFreeHost(ptr);
+            return CudaError(cudaFreeHost(ptr));
         }
     );
 
@@ -209,8 +217,7 @@ PYBIND11_MODULE(backend, m) {
     m.def(
         "cudaGetDevice",
         [](ptr_wrapper<int> device) {
-            // TODO: use custom type for cudaError_t
-            return (int64_t) cudaGetDevice(device.get());
+            return CudaError(cudaGetDevice(device.get()));
         }
     );
 
@@ -234,8 +241,7 @@ PYBIND11_MODULE(backend, m) {
     m.def(
         "cudaGetLastError",
         []() {
-            // TODO: use custom type for cudaError_t
-            return (int64_t) cudaGetLastError();
+            return CudaError(cudaGetLastError());
         }
     );
 
@@ -244,16 +250,14 @@ PYBIND11_MODULE(backend, m) {
     m.def(
         "cudaMalloc",
         [](ptr_wrapper<int *> dev_ptr, uint64_t size) {
-            // TODO: use custom type for cudaError_t
-            return (int64_t) cudaMalloc(dev_ptr.get(), size*sizeof(int));
+            return CudaError(cudaMalloc(dev_ptr.get(), size*sizeof(int)));
         }
     );
 
     m.def(
         "cudaMalloc",
         [](ptr_wrapper<double *> dev_ptr, uint64_t size) {
-            // TODO: use custom type for cudaError_t
-            return (int64_t) cudaMalloc(dev_ptr.get(), size*sizeof(double));
+            return CudaError(cudaMalloc(dev_ptr.get(), size*sizeof(double)));
         }
     );
 
@@ -262,8 +266,7 @@ PYBIND11_MODULE(backend, m) {
     m.def(
         "cudaMallocHost",
         [](ptr_wrapper<int *> dev_ptr, uint64_t size) {
-            // TODO: use custom type for cudaError_t
-            return (int64_t) cudaMallocHost(dev_ptr.get(), size*sizeof(int));
+            return CudaError(cudaMallocHost(dev_ptr.get(), size*sizeof(int)));
         }
     );
 
@@ -271,7 +274,7 @@ PYBIND11_MODULE(backend, m) {
         "cudaMallocHost",
         [](ptr_wrapper<double *> dev_ptr, uint64_t size) {
             // TODO: use custom type for cudaError_t
-            return (int64_t) cudaMallocHost(dev_ptr.get(), size*sizeof(double));
+            return CudaError(cudaMallocHost(dev_ptr.get(), size*sizeof(double)));
         }
     );
 
