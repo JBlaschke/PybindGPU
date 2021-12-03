@@ -72,54 +72,6 @@ enum DataType {
 template <size_t data_type>
 struct DataTypeSpecialization;
 
-// template <>
-// struct DataTypeSpecialization<Int16> {
-//     using type = int16_t;
-//     static std::string label() {return "int16";}
-// };
-// 
-// template <>
-// struct DataTypeSpecialization<Int32> {
-//     using type = int32_t;
-//     static std::string label() {return "int32";}
-// };
-// 
-// template <>
-// struct DataTypeSpecialization<Int64> {
-//     using type = int64_t;
-//     static std::string label() {return "int64";}
-// };
-// 
-// template <>
-// struct DataTypeSpecialization<UInt16> {
-//     using type = uint16_t;
-//     static std::string label() {return "uint16";}
-// };
-// 
-// template <>
-// struct DataTypeSpecialization<UInt32> {
-//     using type = uint32_t;
-//     static std::string label() {return "uint32";}
-// };
-// 
-// template <>
-// struct DataTypeSpecialization<UInt64> {
-//     using type = uint64_t;
-//     static std::string label() {return "uint64";}
-// };
-// 
-// template <>
-// struct DataTypeSpecialization<Float> {
-//     using type = float;
-//     static std::string label() {return "float";}
-// };
-// 
-// template <>
-// struct DataTypeSpecialization<Double> {
-//     using type = double;
-//     static std::string label() {return "double";}
-// };
-
 
 //----------------------------------------------------------------------------//
 // <data-type> <enum> <string identifiers>
@@ -164,6 +116,7 @@ void generate_enumeration(py::module & _mod) {
 
 PYBIND11_MODULE(backend, m) {
     generate_enumeration(m);
+
     // TODO: this is a clumsy way to define data types -- clean this up a wee
     // bit in the future.
     py::class_<ptr_wrapper<int>>(m, "Int_t");
