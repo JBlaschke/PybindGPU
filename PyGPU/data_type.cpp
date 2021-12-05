@@ -17,7 +17,7 @@ DATA_TYPE(double, Float64, "float64", "double")
 
 
 int CudaError::as_int() const {
-    return static_cast<int>(error_code);
+    return static_cast<int>(_obj);
 }
 
 

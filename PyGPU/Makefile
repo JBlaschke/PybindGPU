@@ -15,7 +15,7 @@ all: backend$(PYSUFFIX)
 %.o: %.cu
 	$(NVCXX) -c $(CXXFLAGS) $(NVOPTS) $(INCLUDES) $< -o $@
 
-backend$(PYSUFFIX): backend.o data_type.o
+backend$(PYSUFFIX): backend.o data_type.o device_wrapper.o
 	$(NVCXX) -shared $(CXXFLAGS) $(NVOPTS) $(LDFLAGS) $^ -o $@
 
 clean:

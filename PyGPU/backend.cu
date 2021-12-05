@@ -6,8 +6,6 @@
 namespace py = pybind11;
 
 
-
-
 PYBIND11_MODULE(backend, m) {
 
     // Build all enumerations used internally by cuda bindings
@@ -24,6 +22,10 @@ PYBIND11_MODULE(backend, m) {
                 return "<CudaError: 'code=" + std::to_string(a.as_int()) + "'>";
             }
         );
+
+    // py::class_<obj_wrapper<cudaEvent_t>>(m, "cudaError_t")
+    //    .def(py::init<int>())
+ 
 
     // TODO: this is a clumsy way to define data types -- clean this up a wee
     // bit in the future.

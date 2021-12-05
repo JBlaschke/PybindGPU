@@ -68,12 +68,19 @@ class ptr_wrapper {
 };
 
 
-struct CudaError {
+template <class T>
+struct obj_wrapper {
+    T _obj;
 
-    cudaError_t error_code;
+    obj_wrapper(T & a_obj) : _obj(a_obj) {}
+    obj_wrapper(T   a_obj) : _obj(a_obj) {}
+};
 
-    CudaError(cudaError_t a_error) : error_code(a_error) {}
-    CudaError(int a_error) : error_code(static_cast<cudaError_t>(a_error)) {}
+
+struct CudaError : public obj_wrapper<cudaError_t> {
+
+    CudaError(int a_error) : obj_wrapper(static_cast<cudaError_t>(a_error)) {};
+
     int as_int() const;
 };
 
