@@ -1,28 +1,9 @@
 #include <data_type.h>
 #include <cuda_hip_wrapper.h>
-
 #include <pybind11/pybind11.h>
 
 
 namespace py = pybind11;
-
-
-template <class T>
-class ptr_wrapper {
-    public:
-        ptr_wrapper() : ptr(nullptr) {}
-        ptr_wrapper(T * ptr) : ptr(ptr) {}
-        ptr_wrapper(const ptr_wrapper & other) : ptr(other.ptr) {}
-        void create(size_t N) { ptr = new T[N]; }
-        T & operator* () const { return * ptr; }
-        T * operator->() const { return   ptr; }
-        T * get() const { return ptr; }
-        void destroy() { delete ptr; }
-        ~ptr_wrapper() { delete ptr; }
-        T& operator[](std::size_t idx) const { return ptr[idx]; }
-    private:
-        T * ptr;
-};
 
 
 enum DataType {
@@ -35,13 +16,6 @@ enum DataType {
     Float32,
     Float64,
     DataTypesEnd
-};
-
-struct CudaError {
-    cudaError_t error_code;
-    CudaError(cudaError_t a_error) : error_code(a_error) {}
-    CudaError(int a_error) : error_code(static_cast<cudaError_t>(a_error)) {}
-    int as_int() const {return static_cast<int>(error_code);}
 };
 
 
