@@ -10,6 +10,7 @@ class CudaEvent {
         CudaEvent(unsigned int flags);
         ~CudaEvent();
 
+        cudaEvent_t & operator* () { return event; }
         cudaEvent_t * get() { return & event; } ;
         cudaError_t last_status() const { return status; };
     private:
@@ -27,6 +28,7 @@ class CudaStream {
 #endif
         ~CudaStream();
 
+        cudaStream_t & operator* () { return stream; }
         cudaStream_t * get() { return & stream; } ;
         cudaError_t last_status() const { return status; };
     private:

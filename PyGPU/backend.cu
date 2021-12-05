@@ -44,13 +44,6 @@ PYBIND11_MODULE(backend, m) {
     // TODO: this is a clumsy way to define data types -- clean this up a wee
     // bit in the future.
 
-    // py::class_<ptr_wrapper<cudaEvent_t>>(m, "cudaEvent_t");
-
-    // m.def(
-    //     "NewCudaEvent_t",
-    //     []() {return ptr_wrapper<cudaEvent_t>(new cudaEvent_t); }
-    // );
-
     py::class_<ptr_wrapper<cudaStream_t>>(m, "cudaStream_t");
 
     m.def(
@@ -89,32 +82,27 @@ PYBIND11_MODULE(backend, m) {
     );
 
 
-    // m.def(
-    //     "cudaEventCreate",
-    //     [](ptr_wrapper<cudaEvent_t> event, unsigned int flags) {
-    //         return CudaError(cudaEventCreate(event.get(), flags));
-    //     }
-    // );
-
-
     m.def(
         "cudaEventElapsedTime",
-        [](
-            ptr_wrapper<float> ms,
-            ptr_wrapper<cudaEvent_t> start,
-            ptr_wrapper<cudaEvent_t> end
-        ) {
-            return CudaError(cudaEventElapsedTime(ms.get(), * start, * end));
+        [](CudaEvent & start, CudaEvent & end) {
+            float ms;
+            cudaError_t err = cudaEventElapsedTime(& ms, * start, * end);
+            return std::make_tuple(ms, CudaError(err));
         }
     );
 
 
     m.def(
         "cudaEventRecord",
-        [](
-            ptr_wrapper<cudaEvent_t> event,
-            ptr_wrapper<cudaStream_t> end = 0
-        ) {
+        [](CudaEvent & event) {
+            return CudaError(cudaEventRecord(* event, 0));
+        }
+    );
+
+
+    m.def(
+        "cudaEventRecord",
+        [](CudaEvent & event, CudaStream & end) {
             return CudaError(cudaEventRecord(* event, * end));
         }
     );
@@ -122,7 +110,7 @@ PYBIND11_MODULE(backend, m) {
 
     m.def(
         "cudaEventSynchronize",
-        [](ptr_wrapper<cudaEvent_t> event) {
+        [](CudaEvent & event) {
             return CudaError(cudaEventSynchronize(* event));
         }
     );

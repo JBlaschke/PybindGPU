@@ -61,7 +61,6 @@ class ptr_wrapper {
         T * operator->() const { return   ptr; }
         T * get() const { return ptr; }
         void destroy() { delete ptr; }
-        ~ptr_wrapper() { delete ptr; }
         T & operator[](std::size_t idx) const { return ptr[idx]; }
     private:
         T * ptr;
