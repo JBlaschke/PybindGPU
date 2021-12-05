@@ -12,9 +12,11 @@
 #define cudaDeviceSynchronize hipDeviceSynchronize
 #define cudaError_t hipError_t
 #define cudaEventCreate hipEventCreate
+#define cudaEventCreateWithFlags hipEventCreateWithFlags
 #define cudaEventElapsedTime hipEventElapsedTime
 #define cudaEventRecord hipEventRecord
 #define cudaEventSynchronize hipEventSynchronize
+#define cudaEventDestroy hipEventDestroy
 #define cudaEvent_t hipEvent_t
 #define cudaFree hipFree
 #define cudaFreeHost hipHostFree // hipFreeHost is deprecated
@@ -30,6 +32,7 @@
 #define cudaMemset hipMemset
 #define cudaSetDevice hipSetDevice
 #define cudaStreamCreate hipStreamCreate
+#define cudaStreamCreateWithFlags hipStreamCreateWithFlags
 #define cudaStreamDestroy hipStreamDestroy
 #define cudaStream_t hipStream_t
 #define cudaSuccess hipSuccess

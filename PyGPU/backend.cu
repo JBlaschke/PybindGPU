@@ -1,4 +1,5 @@
 #include <data_type.h>
+#include <device_wrapper.h>
 #include <cuda_hip_wrapper.h>
 #include <pybind11/pybind11.h>
 
@@ -23,19 +24,32 @@ PYBIND11_MODULE(backend, m) {
             }
         );
 
-    // py::class_<obj_wrapper<cudaEvent_t>>(m, "cudaError_t")
-    //    .def(py::init<int>())
- 
+    // This needs to be defined so that the ptr_wrapper has something to return
+    py::class_<ptr_wrapper<CUevent_st * >>(m, "_CUevent_st__ptr");
+
+    py::class_<CudaEvent>(m, "cudaEvent_t")
+        .def(py::init<>())
+        .def(py::init<int>())
+        .def("get",
+            [](CudaEvent & a) {
+                return ptr_wrapper<cudaEvent_t>(a.get());
+            }
+        )
+        .def("last_status",
+            [](const CudaEvent & a) {
+                return CudaError(a.last_status());
+            }
+        );
 
     // TODO: this is a clumsy way to define data types -- clean this up a wee
     // bit in the future.
 
-    py::class_<ptr_wrapper<cudaEvent_t>>(m, "cudaEvent_t");
+    // py::class_<ptr_wrapper<cudaEvent_t>>(m, "cudaEvent_t");
 
-    m.def(
-        "NewCudaEvent_t",
-        []() {return ptr_wrapper<cudaEvent_t>(new cudaEvent_t); }
-    );
+    // m.def(
+    //     "NewCudaEvent_t",
+    //     []() {return ptr_wrapper<cudaEvent_t>(new cudaEvent_t); }
+    // );
 
     py::class_<ptr_wrapper<cudaStream_t>>(m, "cudaStream_t");
 
@@ -75,12 +89,12 @@ PYBIND11_MODULE(backend, m) {
     );
 
 
-    m.def(
-        "cudaEventCreate",
-        [](ptr_wrapper<cudaEvent_t> event, unsigned int flags) {
-            return CudaError(cudaEventCreate(event.get(), flags));
-        }
-    );
+    // m.def(
+    //     "cudaEventCreate",
+    //     [](ptr_wrapper<cudaEvent_t> event, unsigned int flags) {
+    //         return CudaError(cudaEventCreate(event.get(), flags));
+    //     }
+    // );
 
 
     m.def(
