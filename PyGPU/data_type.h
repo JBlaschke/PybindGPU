@@ -32,11 +32,11 @@
     struct DataTypeSpecialization<ENUM_ID> {                                   \
         using type = TYPE;                                                     \
         static std::string label() { GET_FIRST_STRING(__VA_ARGS__); }          \
-        static const auto& labels() { GET_STRING_SET(__VA_ARGS__); }           \
+        static const auto & labels() { GET_STRING_SET(__VA_ARGS__); }          \
     };
 
 template <typename... Args>
-void consume_parameters(Args &&...) {}
+void consume_parameters(Args && ...) {}
 
 template <size_t data_type>
 struct DataTypeSpecialization;

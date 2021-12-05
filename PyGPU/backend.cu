@@ -7,11 +7,13 @@
 namespace py = pybind11;
 
 
-template <class T> class ptr_wrapper {
+template <class T>
+class ptr_wrapper {
     public:
         ptr_wrapper() : ptr(nullptr) {}
         ptr_wrapper(T * ptr) : ptr(ptr) {}
-        ptr_wrapper(const ptr_wrapper& other) : ptr(other.ptr) {}
+        ptr_wrapper(const ptr_wrapper & other) : ptr(other.ptr) {}
+        void create(size_t N) { ptr = new T[N]; }
         T & operator* () const { return * ptr; }
         T * operator->() const { return   ptr; }
         T * get() const { return ptr; }
@@ -60,7 +62,7 @@ DATA_TYPE(double, Float64, "float64", "double")
 
 template <template <size_t> class SpecT, typename Tp, size_t ... Idx>
 void generate_enumeration(
-        py::enum_<Tp> & _enum, std::index_sequence<Idx...>
+        py::enum_<Tp> & _enum, std::index_sequence<Idx ...>
     ) {
         auto _generate = [& _enum](const auto & _labels, Tp _idx) {
             for (const auto & itr : _labels) {
@@ -83,11 +85,39 @@ void generate_enumeration(py::module & _mod) {
 }
 
 
+template <template <size_t> class SpecT, size_t ... DataIdx>
+void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
+    FOLD_EXPRESSION(
+        py::class_<ptr_wrapper<typename SpecT<DataIdx>::type>>(
+            _mod, ("ptr_wrapper_" + SpecT<DataIdx>::label()).c_str()
+        )
+        .def(py::init<>())
+        .def("create", & ptr_wrapper<typename SpecT<DataIdx>::type>::create)
+        .def("destroy", & ptr_wrapper<typename SpecT<DataIdx>::type>::destroy)
+        .def("__repr__",
+            [](const ptr_wrapper<typename SpecT<DataIdx>::type> & a) {
+                return "<ptr_wrapper<" +  SpecT<DataIdx>::label() + ">";
+            }
+        )
+    );
+}
+
+void generate_datatype(py::module & _mod) {
+    generate_datatype<DataTypeSpecialization>(
+        _mod,
+        std::make_index_sequence<DataTypesEnd>{}
+    );
+}
+
+
 
 PYBIND11_MODULE(backend, m) {
 
     // Build all enumerations used internally by cuda bindings
     generate_enumeration(m);
+
+    // Build all datatype wrapper bindings
+    generate_datatype(m);
 
     py::class_<CudaError>(m, "cudaError_t")
         .def(py::init<int>())
@@ -100,19 +130,6 @@ PYBIND11_MODULE(backend, m) {
 
     // TODO: this is a clumsy way to define data types -- clean this up a wee
     // bit in the future.
-    py::class_<ptr_wrapper<int>>(m, "Int_t");
-
-    m.def(
-        "NewInt_t",
-        []() {return ptr_wrapper<int>(new int); }
-    );
-
-    py::class_<ptr_wrapper<float>>(m, "Float_t");
-
-    m.def(
-        "NewFloat_t",
-        []() {return ptr_wrapper<float>(new float); }
-    );
 
     py::class_<ptr_wrapper<cudaEvent_t>>(m, "cudaEvent_t");
 
