@@ -54,17 +54,27 @@ struct DataTypeSpecialization;
 template <class T>
 class ptr_wrapper {
     public:
-        ptr_wrapper() : ptr(nullptr) {}
-        ptr_wrapper(T * ptr) : ptr(ptr) {}
-        ptr_wrapper(const ptr_wrapper & other) : ptr(other.ptr) {}
-        void create(size_t N) { ptr = new T[N]; }
+        ptr_wrapper() : ptr(nullptr), safe(false) {}
+        ptr_wrapper(T * ptr, bool is_safe=false) : ptr(ptr), safe(is_safe) {}
+        ptr_wrapper(const ptr_wrapper & other)
+        : ptr(other.ptr), safe(other.is_safe())
+        {}
+        void create(size_t N) {
+            ptr = new T[N];
+            safe = true;
+        }
         T & operator* () const { return * ptr; }
         T * operator->() const { return   ptr; }
         T * get() const { return ptr; }
-        void destroy() { delete ptr; }
+        void destroy() {
+            delete ptr;
+            safe = false;
+        }
         T & operator[](std::size_t idx) const { return ptr[idx]; }
+        bool is_safe() const { return safe; }
     private:
         T * ptr;
+        bool safe;
 };
 
 
@@ -127,10 +137,21 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
         .def(py::init<>())
         .def("create", & ptr_wrapper<typename SpecT<DataIdx>::type>::create)
         .def("destroy", & ptr_wrapper<typename SpecT<DataIdx>::type>::destroy)
-        .def("get", & ptr_wrapper<typename SpecT<DataIdx>::type>::get)
+        .def("is_safe", & ptr_wrapper<typename SpecT<DataIdx>::type>::is_safe)
+        .def("get",
+            [](const ptr_wrapper<typename SpecT<DataIdx>::type> & a) {
+                using dtype = typename SpecT<DataIdx>::type;
+                dtype * ptr = 0;
+                if (a.is_safe()) ptr = a.get();
+                return std::make_tuple(ptr, a.is_safe());
+            }
+        )
         .def("__repr__",
             [](const ptr_wrapper<typename SpecT<DataIdx>::type> & a) {
-                return "<ptr_wrapper<" +  SpecT<DataIdx>::label() + ">";
+                return "<ptr_wrapper<"
+                    + SpecT<DataIdx>::label() + ">, "
+                    + "is_safe=" + std::to_string(a.is_safe())
+                    + ">";
             }
         )
     );
@@ -171,13 +192,13 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
         .def("host_data", 
             [](DeviceArray<typename SpecT<DataIdx>::type> & a) {
                 using dtype = typename SpecT<DataIdx>::type;
-                return ptr_wrapper<dtype>(a.host_data());
+                return ptr_wrapper<dtype>(a.host_data(), true);
             }
         )
         .def("device_data",
             [](DeviceArray<typename SpecT<DataIdx>::type> & a) {
                 using dtype = typename SpecT<DataIdx>::type;
-                return ptr_wrapper<dtype>(a.device_data());
+                return ptr_wrapper<dtype>(a.device_data(), false);
             }
         )
     );
