@@ -172,7 +172,7 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
                 using dtype = typename SpecT<DataIdx>::type;
                 dtype * data_ptr;
                 return DeviceArray<dtype>(
-                    (dtype *) info.ptr, info.shape[0]
+                    static_cast<dtype *>(info.ptr), info.shape[0]
                 );
             }
         ))
