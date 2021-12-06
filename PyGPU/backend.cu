@@ -117,6 +117,14 @@ PYBIND11_MODULE(backend, m) {
 
 
     m.def(
+        "cudaSetDevice",
+        [](int device) {
+            return CudaError(cudaSetDevice(device));
+        }
+    );
+
+
+    m.def(
         "cudaGetErrorName",
         [](CudaError & error) {
             return std::string(cudaGetErrorName(* error));
