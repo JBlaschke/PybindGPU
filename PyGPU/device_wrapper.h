@@ -84,7 +84,8 @@ class DeviceArray {
             );
         }
 
-        T * data() { return host_ptr; }
+        T * host_data() { return host_ptr; }
+        T * device_data() { return device_ptr; }
         size_t size() const { return m_size; }
         cudaError_t last_status() const { return status; }
         bool allocated() const { return device_allocated; }

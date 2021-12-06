@@ -127,6 +127,7 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
         .def(py::init<>())
         .def("create", & ptr_wrapper<typename SpecT<DataIdx>::type>::create)
         .def("destroy", & ptr_wrapper<typename SpecT<DataIdx>::type>::destroy)
+        .def("get", & ptr_wrapper<typename SpecT<DataIdx>::type>::get)
         .def("__repr__",
             [](const ptr_wrapper<typename SpecT<DataIdx>::type> & a) {
                 return "<ptr_wrapper<" +  SpecT<DataIdx>::label() + ">";
@@ -158,9 +159,27 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
                 return CudaError(a.last_status());
             }
         )
-        .def("allocate", & DeviceArray<typename SpecT<DataIdx>::type>::allocate)
-        .def("to_host", & DeviceArray<typename SpecT<DataIdx>::type>::to_host)
-        .def("to_device", & DeviceArray<typename SpecT<DataIdx>::type>::to_device)
+        .def("allocate",
+            & DeviceArray<typename SpecT<DataIdx>::type>::allocate
+        )
+        .def("to_host",
+            & DeviceArray<typename SpecT<DataIdx>::type>::to_host
+        )
+        .def("to_device",
+            & DeviceArray<typename SpecT<DataIdx>::type>::to_device
+        )
+        .def("host_data", 
+            [](DeviceArray<typename SpecT<DataIdx>::type> & a) {
+                using dtype = typename SpecT<DataIdx>::type;
+                return ptr_wrapper<dtype>(a.host_data());
+            }
+        )
+        .def("device_data",
+            [](DeviceArray<typename SpecT<DataIdx>::type> & a) {
+                using dtype = typename SpecT<DataIdx>::type;
+                return ptr_wrapper<dtype>(a.device_data());
+            }
+        )
     );
 }
 
