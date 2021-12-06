@@ -2,6 +2,10 @@
 #define DEVICE_WRAPPER_H
 
 #include <cuda_hip_wrapper.h>
+#include <pybind11/pybind11.h>
+
+
+namespace py = pybind11;
 
 
 class CudaEvent {
@@ -82,8 +86,25 @@ class DeviceArray {
 
         T * data() { return host_ptr; }
         size_t size() const { return m_size; }
-        cudaError_t last_status() const { return status; };
-        bool allocated() const { return device_allocated; };
+        cudaError_t last_status() const { return status; }
+        bool allocated() const { return device_allocated; }
+
+        py::buffer_info buffer_info() {
+            return py::buffer_info(
+                /* Pointer to buffer */
+                host_ptr,
+                /* Size of one scalar */
+                sizeof(T),
+                /* Python struct-style format descriptor */
+                py::format_descriptor<T>::format(),
+                /* Number of dimensions */
+                1,
+                /* Buffer dimensions */
+                { m_size },
+                /* Strides (in bytes) for each index */
+                { sizeof(T) }
+            );
+        }
 
     private:
         bool host_allocated;

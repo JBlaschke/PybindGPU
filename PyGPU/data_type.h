@@ -150,15 +150,8 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
             }
         ))
         .def_buffer(
-            [](DeviceArray<typename SpecT<DataIdx>::type> & m) -> py::buffer_info {
-                return py::buffer_info(
-                    m.data(),
-                    sizeof(typename SpecT<DataIdx>::type),
-                    py::format_descriptor<typename SpecT<DataIdx>::type>::format(),
-                    1,                                /* Number of dimensions */
-                    { m.size() },                     /* Buffer dimensions */
-                    { sizeof(typename SpecT<DataIdx>::type) }  /* Strides (in bytes) for each index */
-                );
+            [](DeviceArray<typename SpecT<DataIdx>::type> & m) {
+                return m.buffer_info();
         })
         .def("last_status",
             [](const DeviceArray<typename SpecT<DataIdx>::type> & a) {
