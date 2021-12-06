@@ -41,15 +41,24 @@ PYBIND11_MODULE(backend, m) {
             }
         );
 
+    py::class_<CudaStream>(m, "cudaStream_t")
+        .def(py::init<>())
+        .def(py::init<int>())
+        .def("get",
+            [](CudaStream & a) {
+                return ptr_wrapper<cudaStream_t>(a.get());
+            }
+        )
+        .def("last_status",
+            [](const CudaStream & a) {
+                return CudaError(a.last_status());
+            }
+        );
+
+
+
     // TODO: this is a clumsy way to define data types -- clean this up a wee
     // bit in the future.
-
-    py::class_<ptr_wrapper<cudaStream_t>>(m, "cudaStream_t");
-
-    m.def(
-        "NewCudaStream_t",
-        []() {return ptr_wrapper<cudaStream_t>(new cudaStream_t); }
-    );
 
     py::class_<ptr_wrapper<int *>>(m, "IntPtr_t");
 
@@ -134,15 +143,17 @@ PYBIND11_MODULE(backend, m) {
 
     m.def(
         "cudaGetDevice",
-        [](ptr_wrapper<int> device) {
-            return CudaError(cudaGetDevice(device.get()));
+        []() {
+            int device;
+            cudaError_t err = cudaGetDevice(& device);
+            return std::make_tuple(device, CudaError(err));
         }
     );
 
 
     m.def(
         "cudaGetErrorName",
-        [](ptr_wrapper<cudaError_t> error) {
+        [](CudaError & error) {
             return std::string(cudaGetErrorName(* error));
         }
     );
@@ -150,7 +161,7 @@ PYBIND11_MODULE(backend, m) {
 
     m.def(
         "cudaGetErrorString",
-        [](ptr_wrapper<cudaError_t> error) {
+        [](CudaError & error) {
             return std::string(cudaGetErrorString(* error));
         }
     );

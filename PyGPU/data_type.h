@@ -73,6 +73,8 @@ struct obj_wrapper {
 
     obj_wrapper(T & a_obj) : _obj(a_obj) {}
     obj_wrapper(T   a_obj) : _obj(a_obj) {}
+    T & operator* () const { return _obj; }
+    T & operator* ()       { return _obj; }
 };
 
 
