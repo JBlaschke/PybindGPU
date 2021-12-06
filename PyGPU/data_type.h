@@ -139,6 +139,16 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
             py::buffer_protocol()
         )
         .def(py::init<int>())
+        .def(py::init(
+            [](py::buffer b) {
+                py::buffer_info info = b.request();
+                using dtype = typename SpecT<DataIdx>::type;
+                dtype * data_ptr;
+                return DeviceArray<dtype>(
+                    (dtype *) info.ptr, info.shape[0]
+                );
+            }
+        ))
         .def_buffer(
             [](DeviceArray<typename SpecT<DataIdx>::type> & m) -> py::buffer_info {
                 return py::buffer_info(
@@ -150,6 +160,14 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
                     { sizeof(typename SpecT<DataIdx>::type) }  /* Strides (in bytes) for each index */
                 );
         })
+        .def("last_status",
+            [](const DeviceArray<typename SpecT<DataIdx>::type> & a) {
+                return CudaError(a.last_status());
+            }
+        )
+        .def("allocate", & DeviceArray<typename SpecT<DataIdx>::type>::allocate)
+        .def("to_host", & DeviceArray<typename SpecT<DataIdx>::type>::to_host)
+        .def("to_device", & DeviceArray<typename SpecT<DataIdx>::type>::to_device)
     );
 }
 

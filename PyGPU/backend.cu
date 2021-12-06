@@ -56,25 +56,6 @@ PYBIND11_MODULE(backend, m) {
         );
 
 
-
-    // TODO: this is a clumsy way to define data types -- clean this up a wee
-    // bit in the future.
-
-    py::class_<ptr_wrapper<int *>>(m, "IntPtr_t");
-
-    m.def(
-        "NewIntPtr_t",
-        []() {return ptr_wrapper<int *>(new int *); }
-    );
-
-    py::class_<ptr_wrapper<double *>>(m, "DoublePtr_t");
-
-    m.def(
-        "NewDoublePtr_t",
-        []() {return ptr_wrapper<double *>(new double *); }
-    );
-
-
     m.def(
         "cudaDeviceReset",
         []() {
@@ -126,22 +107,6 @@ PYBIND11_MODULE(backend, m) {
 
 
     m.def(
-        "cudaFree",
-        [](void * dev_ptr) {
-            return CudaError(cudaFree(dev_ptr));
-        }
-    );
-
-
-    m.def(
-        "cudaFreeHost",
-        [](void * ptr) {
-            return CudaError(cudaFreeHost(ptr));
-        }
-    );
-
-
-    m.def(
         "cudaGetDevice",
         []() {
             int device;
@@ -173,63 +138,6 @@ PYBIND11_MODULE(backend, m) {
             return CudaError(cudaGetLastError());
         }
     );
-
-
-    // TODO: Template the argument data type
-    m.def(
-        "cudaMalloc",
-        [](ptr_wrapper<int *> dev_ptr, uint64_t size) {
-            return CudaError(cudaMalloc(dev_ptr.get(), size*sizeof(int)));
-        }
-    );
-
-    m.def(
-        "cudaMalloc",
-        [](ptr_wrapper<double *> dev_ptr, uint64_t size) {
-            return CudaError(cudaMalloc(dev_ptr.get(), size*sizeof(double)));
-        }
-    );
-
-
-    // TODO: Template the argument data type
-    m.def(
-        "cudaMallocHost",
-        [](ptr_wrapper<int *> dev_ptr, uint64_t size) {
-            return CudaError(cudaMallocHost(dev_ptr.get(), size*sizeof(int)));
-        }
-    );
-
-    m.def(
-        "cudaMallocHost",
-        [](ptr_wrapper<double *> dev_ptr, uint64_t size) {
-            // TODO: use custom type for cudaError_t
-            return CudaError(cudaMallocHost(dev_ptr.get(), size*sizeof(double)));
-        }
-    );
-
-// //  __host__ ​cudaError_t cudaMemcpy ( void* dst, const void* src, size_t count, cudaMemcpyKind kind ) 
-// cudaMemcpyDeviceToHost
-// cudaMemcpyHostToDevice
-// 
-//     // TODO: Template the argument data type to direct data
-//     // using custom argument type
-//     m.def(
-//         "cudaMemcpyDeviceToHost",
-//         [](ptr_wrapper<int> dst, ptr_wrapper<int> src, uint64_t count) {
-//             // TODO: use custom type for cudaError_t
-//             return (int64_t) cudaMemcpy();
-//         }
-//     );
-// 
-//     m.def(
-//         "cudaMallocHost",
-//         [](ptr_wrapper<double *> dev_ptr, uint64_t size) {
-//             // TODO: use custom type for cudaError_t
-//             return (int64_t) cudaMallocHost(dev_ptr.get(), size*sizeof(double));
-//         }
-//     );
-
-
 
 
     m.attr("major_version")   = py::int_(0);

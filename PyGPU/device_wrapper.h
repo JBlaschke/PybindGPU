@@ -43,12 +43,18 @@ class DeviceArray {
         DeviceArray(size_t size)
         : m_size(size), device_allocated(false) {
             host_ptr = new T[size];
+            host_allocated = true;
+        };
+
+        DeviceArray(T * data_ptr, size_t size)
+        : m_size(size), device_allocated(false) {
+            host_ptr = data_ptr;
+            host_allocated = false;
         };
 
         ~DeviceArray() {
-            delete host_ptr;
-            if (device_allocated)
-                status = cudaFree(device_ptr);
+            if (host_allocated) delete host_ptr;
+            if (device_allocated) status = cudaFree(device_ptr);
         }
 
         void allocate() {
@@ -61,13 +67,17 @@ class DeviceArray {
         void to_device() {
             if (!device_allocated) return;
 
-            status = cudaMemcpy(device_ptr, host_ptr, cudaMemcpyHostToDevice);
+            status = cudaMemcpy(
+                device_ptr, host_ptr, m_size, cudaMemcpyHostToDevice
+            );
         }
 
         void to_host() {
             if (!device_allocated) return;
 
-            status = cudaMemcpy(host_ptr, device_ptr, cudaMemcpyDeviceToHost);
+            status = cudaMemcpy(
+                host_ptr, device_ptr, m_size, cudaMemcpyDeviceToHost
+            );
         }
 
         T * data() { return host_ptr; }
@@ -76,6 +86,7 @@ class DeviceArray {
         bool allocated() const { return device_allocated; };
 
     private:
+        bool host_allocated;
         bool device_allocated;
 
         size_t m_size;
