@@ -2,6 +2,7 @@
 #define DATA_TYPE_H
 
 #include <set>
+#include <device_wrapper.h>
 #include <cuda_hip_wrapper.h>
 #include <pybind11/pybind11.h>
 
@@ -131,6 +132,24 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
                 return "<ptr_wrapper<" +  SpecT<DataIdx>::label() + ">";
             }
         )
+    );
+    FOLD_EXPRESSION(
+        py::class_<DeviceArray<typename SpecT<DataIdx>::type>>(
+            _mod, ("DeviceArray_" + SpecT<DataIdx>::label()).c_str(),
+            py::buffer_protocol()
+        )
+        .def(py::init<int>())
+        .def_buffer(
+            [](DeviceArray<typename SpecT<DataIdx>::type> & m) -> py::buffer_info {
+                return py::buffer_info(
+                    m.data(),
+                    sizeof(typename SpecT<DataIdx>::type),
+                    py::format_descriptor<typename SpecT<DataIdx>::type>::format(),
+                    1,                                /* Number of dimensions */
+                    { m.size() },                     /* Buffer dimensions */
+                    { sizeof(typename SpecT<DataIdx>::type) }  /* Strides (in bytes) for each index */
+                );
+        })
     );
 }
 
