@@ -146,6 +146,11 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
                 return std::make_tuple(ptr, a.is_safe());
             }
         )
+        .def("unsafe_get",
+            [](const ptr_wrapper<typename SpecT<DataIdx>::type> & a) {
+                return a.get();
+            }
+        )
         .def("__repr__",
             [](const ptr_wrapper<typename SpecT<DataIdx>::type> & a) {
                 return "<ptr_wrapper<"
