@@ -152,13 +152,10 @@ class DeviceArray {
                 /* Python struct-style format descriptor */
                 py::format_descriptor<T>::format(),
                 /* Number of dimensions */
-                // 1,
                 m_ndim,
                 /* Buffer dimensions */
-                // { m_size },
                 m_shape,
                 /* Strides (in bytes) for each index */
-                // { sizeof(T) }
                 m_strides
             );
         }
