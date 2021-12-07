@@ -89,6 +89,7 @@ void generate_enumeration(
         };
 
         FOLD_EXPRESSION(_generate(SpecT<Idx>::labels(), static_cast<Tp>(Idx)));
+        _enum.value("__size__", (DataType)(DataTypesEnd + 1));
 }
 
 
