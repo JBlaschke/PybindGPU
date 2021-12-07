@@ -2,6 +2,7 @@
 #define DATA_TYPE_H
 
 #include <set>
+#include <ptr_wrapper.h>
 #include <device_wrapper.h>
 #include <cuda_hip_wrapper.h>
 #include <pybind11/pybind11.h>
@@ -50,43 +51,6 @@ void consume_parameters(Args && ...) {}
 template <size_t data_type>
 struct DataTypeSpecialization;
 
-
-template <class T>
-class ptr_wrapper {
-    public:
-        ptr_wrapper() : ptr(nullptr), safe(false) {}
-        ptr_wrapper(T * ptr, bool is_safe=false) : ptr(ptr), safe(is_safe) {}
-        ptr_wrapper(const ptr_wrapper & other)
-        : ptr(other.ptr), safe(other.is_safe())
-        {}
-        void create(size_t N) {
-            ptr = new T[N];
-            safe = true;
-        }
-        T & operator* () const { return * ptr; }
-        T * operator->() const { return   ptr; }
-        T * get() const { return ptr; }
-        void destroy() {
-            delete ptr;
-            safe = false;
-        }
-        T & operator[](std::size_t idx) const { return ptr[idx]; }
-        bool is_safe() const { return safe; }
-    private:
-        T * ptr;
-        bool safe;
-};
-
-
-template <class T>
-struct obj_wrapper {
-    T _obj;
-
-    obj_wrapper(T & a_obj) : _obj(a_obj) {}
-    obj_wrapper(T   a_obj) : _obj(a_obj) {}
-    T & operator* () const { return _obj; }
-    T & operator* ()       { return _obj; }
-};
 
 
 struct CudaError : public obj_wrapper<cudaError_t> {
@@ -138,17 +102,10 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
         .def("create", & ptr_wrapper<typename SpecT<DataIdx>::type>::create)
         .def("destroy", & ptr_wrapper<typename SpecT<DataIdx>::type>::destroy)
         .def("is_safe", & ptr_wrapper<typename SpecT<DataIdx>::type>::is_safe)
-        .def("get",
+        .def("__int__",
             [](const ptr_wrapper<typename SpecT<DataIdx>::type> & a) {
-                using dtype = typename SpecT<DataIdx>::type;
-                dtype * ptr = 0;
-                if (a.is_safe()) ptr = a.get();
-                return std::make_tuple(ptr, a.is_safe());
-            }
-        )
-        .def("unsafe_get",
-            [](const ptr_wrapper<typename SpecT<DataIdx>::type> & a) {
-                return a.get();
+                unsigned long a_ptr = a;
+                return a_ptr;
             }
         )
         .def("__repr__",

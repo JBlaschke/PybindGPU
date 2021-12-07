@@ -1,4 +1,5 @@
 #include <data_type.h>
+#include <ptr_wrapper.h>
 #include <device_wrapper.h>
 #include <cuda_hip_wrapper.h>
 #include <pybind11/pybind11.h>

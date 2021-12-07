@@ -63,13 +63,12 @@ In order to pass aroudn pointers, we use a `pointer_wrapper_<dtype>` class. This
 encapsulates the pointers and allows them to be treated as Python objects.
 Pointers controlled by the python process (host pointers that have been
 allocated) are considered as "safe", and can be accessed using the `get()`
-function. This function will return a tuple containing the pointer and a boolean
-for `is_safe`. If the pointer is safe it will return integer and `True`, and if
-it is not safe then it will return `(None, false)` to python. The `get()`
-function will always return the pointer in C. We recommend that any C function
-implement the `ptr_wrapper`. In case this is not possible, we also provide
-`unsafe_get()`, which ALWAYS returns the pointer -- even if this might cause the
-interpreter to segfault.
+function. As Python doesn't have a concept of raw pointers, we follow the lead
+of `PyCUDA` and allow raw pointers to be passed as integers (yea, I know:
+shudder) using the `__int__` function.
+
+Note: the `prt_wrapper` template is available here:
+`PyGPU/include/ptr_wrapper.h`
 
 ## Installation
 
