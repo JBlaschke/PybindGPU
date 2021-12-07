@@ -1,6 +1,9 @@
 #ifndef DEVICE_WRAPPER_H
 #define DEVICE_WRAPPER_H
 
+#include <iostream>
+#include <vector>
+#include <numeric>
 #include <cuda_hip_wrapper.h>
 #include <pybind11/pybind11.h>
 
@@ -44,14 +47,64 @@ class CudaStream {
 template<class T>
 class DeviceArray {
     public:
-        DeviceArray(size_t size)
-        : m_size(size), device_allocated(false) {
+        DeviceArray(ssize_t size)
+        : m_size(size), m_shape{size}, device_allocated(false) {
+            // define array strides
+            m_ndim = 1;
+            m_strides = std::vector<ssize_t>(1);
+            m_strides[0] = sizeof(T);
+            // allocate data
             host_ptr = new T[size];
             host_allocated = true;
         };
 
-        DeviceArray(T * data_ptr, size_t size)
-        : m_size(size), device_allocated(false) {
+        DeviceArray(T * data_ptr, ssize_t size)
+        : m_size(size), m_shape{size}, device_allocated(false) {
+            // define array strides
+            m_ndim = 1;
+            m_strides = std::vector<ssize_t>(1);
+            m_strides[0] = sizeof(T);
+            // transfer data
+            host_ptr = data_ptr;
+            host_allocated = false;
+        };
+
+        DeviceArray(std::vector<ssize_t> & shape)
+        : m_shape{shape}, device_allocated(false) {
+            // total size
+            m_size = std::accumulate(
+                shape.begin(), shape.end(), 1,
+                std::multiplies<ssize_t>()
+            );
+            // define array strides, assuming c-order
+            m_ndim = shape.size();
+            m_strides = std::vector<ssize_t>(m_ndim);
+            ssize_t stride = sizeof(T);
+            for (int i = m_ndim - 1; i >= 0; i--) {
+                m_strides[i] = stride;
+                stride = stride * shape[i];
+            }
+            // allocate data
+            host_ptr = new T[m_size];
+            host_allocated = true;
+        };
+
+        DeviceArray(T * data_ptr, std::vector<ssize_t> & shape)
+        : m_shape{shape}, device_allocated(false) {
+            // total size
+            m_size = std::accumulate(
+                shape.begin(), shape.end(), 1,
+                std::multiplies<ssize_t>()
+            );
+            // define array strides, assuming c-order
+            m_ndim = shape.size();
+            m_strides = std::vector<ssize_t>(m_ndim);
+            ssize_t stride = sizeof(T);
+            for (int i = m_ndim - 1; i >= 0; i--) {
+                m_strides[i] = stride;
+                stride = stride * shape[i];
+            }
+            // transfer data
             host_ptr = data_ptr;
             host_allocated = false;
         };
@@ -86,7 +139,7 @@ class DeviceArray {
 
         T * host_data() { return host_ptr; }
         T * device_data() { return device_ptr; }
-        size_t size() const { return m_size; }
+        ssize_t size() const { return m_size; }
         cudaError_t last_status() const { return status; }
         bool allocated() const { return device_allocated; }
 
@@ -99,11 +152,14 @@ class DeviceArray {
                 /* Python struct-style format descriptor */
                 py::format_descriptor<T>::format(),
                 /* Number of dimensions */
-                1,
+                // 1,
+                m_ndim,
                 /* Buffer dimensions */
-                { m_size },
+                // { m_size },
+                m_shape,
                 /* Strides (in bytes) for each index */
-                { sizeof(T) }
+                // { sizeof(T) }
+                m_strides
             );
         }
 
@@ -111,7 +167,11 @@ class DeviceArray {
         bool host_allocated;
         bool device_allocated;
 
-        size_t m_size;
+        ssize_t m_size;
+        int m_ndim;
+        std::vector<ssize_t> m_shape;
+        std::vector<ssize_t> m_strides;
+
         T * host_ptr;
         T * device_ptr;
 

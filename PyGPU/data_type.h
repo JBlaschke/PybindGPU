@@ -89,7 +89,7 @@ void generate_enumeration(
         };
 
         FOLD_EXPRESSION(_generate(SpecT<Idx>::labels(), static_cast<Tp>(Idx)));
-        _enum.value("__size__", (DataType)(DataTypesEnd + 1));
+        _enum.value("__size__", DataTypesEnd);
 }
 
 
@@ -123,14 +123,14 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
             _mod, ("DeviceArray_" + SpecT<DataIdx>::label()).c_str(),
             py::buffer_protocol()
         )
-        .def(py::init<int>())
+        .def(py::init<size_t>())
         .def(py::init(
             [](py::buffer b) {
                 py::buffer_info info = b.request();
                 using dtype = typename SpecT<DataIdx>::type;
                 dtype * data_ptr;
                 return DeviceArray<dtype>(
-                    static_cast<dtype *>(info.ptr), info.shape[0]
+                    static_cast<dtype *>(info.ptr), info.shape
                 );
             }
         ))
