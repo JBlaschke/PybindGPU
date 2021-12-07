@@ -1,3 +1,2 @@
 from .backend import *
-
-# TODO: add hip and non-vendor prefix
+from .gpuarray import GPUArray, to_gpu
