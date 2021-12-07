@@ -104,7 +104,7 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
         .def("is_safe", & ptr_wrapper<typename SpecT<DataIdx>::type>::is_safe)
         .def("__int__",
             [](const ptr_wrapper<typename SpecT<DataIdx>::type> & a) {
-                unsigned long a_ptr = a;
+                intptr_t a_ptr = a;  // calls custom conversion operator
                 return a_ptr;
             }
         )

@@ -2,6 +2,9 @@
 #define PTR_WRAPPER_H
 
 
+#include <cstdint>  // used by intptr_t
+
+
 template <class T>
 class ptr_wrapper {
     public:
@@ -34,8 +37,10 @@ class ptr_wrapper {
         }
 
         // Conversion function 
-        operator unsigned long() const {
-            return (unsigned long) ptr;
+        operator intptr_t() const {
+            // Use intptr_t to ensure that the destination type (intptr_t) is
+            // big enough to hold the pointer.
+            return (intptr_t) ptr;
         }
 
         // Deallocator
