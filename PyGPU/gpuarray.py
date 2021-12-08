@@ -130,7 +130,8 @@ class GPUArray(object):
         PyCDUA compatibility: .ptr returns and integer representation of the
         device pointer.
         """
-        self.device_data.__int__()
+        print("PTR PTR PTR:", self.device_data.__int__())
+        return self.device_data.__int__()
 
 
     def get(self):
@@ -138,8 +139,12 @@ class GPUArray(object):
         PyCUDA compatibility: .get() transfers data back to host and generates
         a numpy array out of the host buffer.
         """
+        print("HI THERE!", flush=True)
         self._device_array.to_host()
-        return np.array(self._device_array)
+        print("HO THERE!", flush=True)
+        a = np.array(self._device_array)
+        print("HO HO!", flush=True)
+        return a
 
 
     def __cuda_array_interface__(self):
