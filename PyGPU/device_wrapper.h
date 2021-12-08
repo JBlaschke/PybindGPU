@@ -140,6 +140,8 @@ class DeviceArray {
         T * host_data() { return host_ptr; }
         T * device_data() { return device_ptr; }
         ssize_t size() const { return m_size; }
+        const std::vector<ssize_t> & shape() const { return m_shape; };
+        const std::vector<ssize_t> & strides() const { return m_strides; };
         cudaError_t last_status() const { return status; }
         bool allocated() const { return device_allocated; }
 

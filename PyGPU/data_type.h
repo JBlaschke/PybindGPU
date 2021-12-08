@@ -7,6 +7,9 @@
 #include <cuda_hip_wrapper.h>
 #include <pybind11/pybind11.h>
 
+#include <complex>
+#include <pybind11/complex.h>
+
 
 // TODO: these are from the PyKokkos source code -- and they need to be
 // documented
@@ -73,6 +76,7 @@ enum DataType {
     UInt64,
     Float32,
     Float64,
+    Complex64,
     DataTypesEnd
 };
 
@@ -125,6 +129,16 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
         )
         .def(py::init<size_t>())
         .def(py::init(
+            [](py::list l) {
+                using dtype = typename SpecT<DataIdx>::type;
+                std::vector<ssize_t> shape(py::len(l));
+                for (size_t i = 0; i < shape.size(); i++) {
+                    shape[i] = l[i].cast<ssize_t>();
+                }
+                return DeviceArray<dtype>(shape);
+            }
+        ))
+        .def(py::init(
             [](py::buffer b) {
                 py::buffer_info info = b.request();
                 using dtype = typename SpecT<DataIdx>::type;
@@ -138,6 +152,15 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
             [](DeviceArray<typename SpecT<DataIdx>::type> & m) {
                 return m.buffer_info();
         })
+        .def("size",
+            & DeviceArray<typename SpecT<DataIdx>::type>::size
+        )
+        .def("shape",
+            & DeviceArray<typename SpecT<DataIdx>::type>::shape
+        )
+        .def("strides",
+            & DeviceArray<typename SpecT<DataIdx>::type>::strides
+        )
         .def("last_status",
             [](const DeviceArray<typename SpecT<DataIdx>::type> & a) {
                 return CudaError(a.last_status());

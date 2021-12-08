@@ -1,10 +1,12 @@
 # PyGPU
 
-Python bindings to control a GPU. This is intended to be a very lightweight
-alternative to `PyCUDA`, or `CuPy`, as well as working on AMD GPUs. This module
-allows all the usual device controls (setting/getting the device ID, stream, and
-events), as well as controlling the data flow to and fromt he device. This
-module does not let you launch device code -- that's up to you dear user.
+Light-weight python bindings to control GPUs. This is intended to be a very
+lightweight alternative to `PyCUDA`, or `CuPy`, as well as working on AMD GPUs.
+Inteded to help you write light-weight python glue code for existing device
+kernels. This module allows all the usual device controls (setting/getting the
+device ID, stream, and events), as well as controlling the data flow to and
+fromt he device. This module does not let you launch device code -- that's up to
+you dear user.
 
 What is this good for? If you have device code already, and you want to control
 it from Python. This module has three ingredients:
@@ -74,3 +76,27 @@ Note: the `prt_wrapper` template is available here:
 
 WIP. Currenly only avaialble via makefile. Be sure to point the `sys.path` to
 where you compiled this module.
+
+## Why?!
+
+I love PyCUDA and CuPy, but I only use some of their functionality. I have
+existing device code, and am only looking for something that lets me write
+python glue code (without introducing more baggage).
+
+Advantage over PyCUDA and CuPy:
+
+1. Supports NVIDIA and AMD (and Intel? Soon....)
+2. Light-weight (take 20s to compile on my system ... I'm looking at you CuPy!)
+3. Minimal dependencies (only needs numpy, pybind11, and the vendor compiler)
+4. Uses the runtime API, rather than the runtime driver -- bringing the python
+   code in line with modern GPU SDK's
+5. (opinion alert!) Uses pybind11 rather than boost.python (you know what I'm
+   talking about)
+
+Disadvantages to PyCUDA and CuPy:
+
+1. Does NOT run code on GPUs -- there is a reason why this is so light-weight
+2. No official Vendor support (ok, tbh I'm pretty sure that they will continue
+   to support their own SDKs)
+3. Currently this is not very mature -- I would appreciate PRs to build some
+   institutional knowledege

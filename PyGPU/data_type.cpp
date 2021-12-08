@@ -14,7 +14,7 @@ DATA_TYPE(uint32_t, UInt32, "uint32", "unsigned", "unsigned_int")
 DATA_TYPE(uint64_t, UInt64, "uint64", "unsigned_long")
 DATA_TYPE(float, Float32, "float32", "float")
 DATA_TYPE(double, Float64, "float64", "double")
-
+DATA_TYPE(std::complex<float>, Complex64, "complex64", "complex64")
 
 int CudaError::as_int() const {
     return static_cast<int>(_obj);
