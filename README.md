@@ -25,6 +25,49 @@ record the event onto the device.
 
 ## Move Data
 
+We provide a high-level and a low-level interface to data on the device. The
+high-level interface is inteded to be compatible with `numpy` and `PyCUDA`, it
+automatically allocates memory (and selects the correct low-level
+`DeviceArray_<dtype>`).
+
+### High-Level Interface
+
+The high-level interface is provided using the `GPUArray` object. It exposes the
+same functions as `numpy` or `PyCUDA` arrays:
+1. Automatic memory allocation/deallocation on the device
+2. Constructors that either take a buffer type, or array dimention (and data
+   type)
+3. `__getitem__(...)`: Allow indexing and slicing
+4. `.to_gpu()`: send data from the host to the device
+5. `.get()`: send from the device to the host
+6. `.ptr`: returns a `ctypes`-compatible pointer (as integer) to the device
+   memory
+
+Example usage:
+
+```python
+import numpy as np
+import PyGPU as gpuarray
+
+# Send a numpy array to the device
+k = np.array([1, 2, 3, 4, 5, 6])
+k_gpu = gpuarray.to_gpu(k)
+
+# Allocate memory (e.g. a 3x3x3 array) on device
+fk_gpu = gpuarray.GPUArray((3, 3, 3), dtype=complex_dtype)
+
+# Send device memory to host
+fk = fk_gpu.get()
+```
+
+### `PyGUDA` Compatibility
+
+1. Device control should take place using the `cudaSetDevice(<device id>)`
+   function. `idx, err = cudaGetDevice()` returns the ID of the current device.
+2. Replace `import PyCUDA.gpuarray as gpuarray` with `import PyGPU as gpuarray`
+
+### Low-Level Interface
+
 We actually abstract devicde arrays using the `DeviceArray_<dtype>` object,
 where `<dtype>` can be any of `int16`, `int32`, `int64`, `unit16`, `unit32`,
 `uint64`, `float32`, `float64`. Device arrays have two sides: the `host_data()`
@@ -45,7 +88,9 @@ da.to_host()              # Copy data back into the data pointer in A
 ```
 
 Note: the data type suffix (`_int64` in the example above) needs to match the
-data type of the buffer.
+data type of the buffer. The low-level interface doesn't check the data types of
+any buffers it is give, and it also doesn't automatically allocate memory on the
+device.
 
 ## Abstract Host and Device Pointers and Error Codes
 

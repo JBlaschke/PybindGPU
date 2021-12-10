@@ -70,7 +70,7 @@ class GPUArray(object):
 
         elif isinstance(a, tuple) or isinstance(a, list):
             a = list(a)  # make sure that a is a list (and not a tuple)
-            dtype = kwargs["dtype"]
+            dtype = kwargs.get("dtype", "float64")
 
             if dtype in ("int16", np.int16):
                 self._device_array = DeviceArray_int16(a)
