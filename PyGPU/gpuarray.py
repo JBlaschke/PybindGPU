@@ -20,7 +20,15 @@ class GPUArray(object):
 
     def __init__(self, *args, **kwargs):
 
-        a = args[0]
+        if "shape" in kwargs:
+            a = kwargs["shape"]
+        else:
+            a = args[0]
+
+        print("----------- INIT -----------", flush=True)
+        print(args)
+        print(kwargs, flush=True)
+
 
         if isinstance(a, np.ndarray):
 
@@ -102,7 +110,12 @@ class GPUArray(object):
                 "input must either a numpy array -- or a list, or a tuple"
             )
 
+        print("HOHOHOHOHOHOHOHOHOHOHOHO", flush=True)
+
+
         self._device_array.allocate()
+
+        print("----------------------------", flush=True)
 
 
     @property
@@ -133,11 +146,9 @@ class GPUArray(object):
     @property
     def ptr(self):
         """
-        PyCDUA compatibility: .ptr returns and integer representation of the
-        device pointer.
+        Numpy/ctypes compatibility: .ptr returns and integer representation of
+        the device pointer.
         """
-        # print("PTR PTR PTR:", self.device_data.__int__(), flush=True)
-        # print("allocated:", self._device_array.allocated(), flush=True)
         return self.device_data.__int__()
 
 
@@ -158,8 +169,6 @@ class GPUArray(object):
         """
         Returns a CUDA Array Interface dictionary describing this array's data.
         """
-        # print("__cuda_array_interface__", flush=True)
-
         return {
             "shape": self.shape,
             "strides": self.strides,
@@ -199,13 +208,17 @@ class GPUArray(object):
         # __getitme__ function from numpy, which make unnecessary copies, so
         # this is very much just a HACK!
 
+        print("--------- GETITEM ----------", flush=True)
         self.to_host()  # Send data to host
 
         host_cpy = np.array(self._device_array).copy()
         host_idx = host_cpy[index]  # Borrow __getitem__ from numpy
-        device_new = GPUArray(host_idx)
 
+        device_new = GPUArray(host_idx, copy=True)
         device_new.to_device()  # Send data back to device
+
+        print("----------------------------", flush=True)
+
 
         return device_new
 
@@ -213,6 +226,6 @@ class GPUArray(object):
 
 def to_gpu(cpu_data):
     gpu_array = GPUArray(cpu_data)
-    gpu_array.allocate()
+    # gpu_array.allocate()
     gpu_array.to_device()
     return gpu_array

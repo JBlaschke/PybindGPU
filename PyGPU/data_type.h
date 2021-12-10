@@ -140,7 +140,7 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
                 }
                 return DeviceArray<dtype>(shape);
             }
-        ))
+        ), py::return_value_policy::reference)
         .def(py::init(
             [](py::buffer b) {
                 py::buffer_info info = b.request();
@@ -150,7 +150,7 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
                     static_cast<dtype *>(info.ptr), info.shape
                 );
             }
-        ))
+        ), py::return_value_policy::reference)
         .def_buffer(
             [](DeviceArray<typename SpecT<DataIdx>::type> & m) {
                 return m.buffer_info();
