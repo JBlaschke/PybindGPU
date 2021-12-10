@@ -1,16 +1,15 @@
-from sys import path
-path.append("..")
-
 from os.path import abspath, dirname, join
-
-import numpy as np
-import PyGPU as gpuarray
 
 import ctypes
 from ctypes import c_double
 from ctypes import c_int
 from ctypes import c_float
 from ctypes import c_void_p
+
+import numpy as np
+import PyGPU as gpuarray
+
+# Create ctypes wrappers of the ctypes test functions
 
 c_int_p = ctypes.POINTER(c_int)
 c_float_p = ctypes.POINTER(c_float)
@@ -27,6 +26,7 @@ c_test_ptr_int.argtypes = [ c_void_p, c_int]
 c_test_ptr_int_cuda = lib.test_ptr_int_cuda
 c_test_ptr_int_cuda.argtypes = [ c_void_p, c_int]
 
+
 # Test Backend
 
 k = np.array([1, 2, 3])
@@ -37,7 +37,8 @@ dk.to_device()
 dk.device_data().print_address()
 print(dk.device_data().__int__())
 c_print_address(dk.device_data().__int__())
-c_test_ptr_int_cuda(dk.device_data().__int__(), 6)
+c_test_ptr_int_cuda(dk.device_data().__int__(), 3)
+
 
 # Test Frontend
 
