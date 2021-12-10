@@ -5,7 +5,8 @@ from .backend import dtype
 from .backend import \
     DeviceArray_int16,    DeviceArray_int32,   DeviceArray_int64,\
     DeviceArray_uint16,   DeviceArray_uint32,  DeviceArray_uint64,\
-    DeviceArray_float32,  DeviceArray_float64, DeviceArray_complex64
+    DeviceArray_float32,  DeviceArray_float64, DeviceArray_complex64,\
+    DeviceArray_complex128
 
 
 SUPPORTED_DTYPES = tuple(dtype(i).name for i in range(dtype.__size__.value))
@@ -64,6 +65,9 @@ class GPUArray(object):
             elif self._hold.dtype.name == "complex64":
                 self._device_array = DeviceArray_complex64(self._hold)
                 self._dtypestr = "complex64"
+            elif self._hold.dtype.name == "complex128":
+                self._device_array = DeviceArray_complex128(self._hold)
+                self._dtypestr = "complex128"
             else:
                 raise UnsupportedDataType(
                     f"Data type: {self._hold.dtype.name} is not supported!"
@@ -100,6 +104,9 @@ class GPUArray(object):
             elif dtype in ("complex64", np.complex64):
                 self._device_array = DeviceArray_complex64(a)
                 self._dtypestr = "complex64"
+            elif dtype in ("complex128", np.complex128):
+                self._device_array = DeviceArray_complex128(a)
+                self._dtypestr = "complex128"
             else:
                 raise UnsupportedDataType(
                     f"Data type: {dtype} is not supported!"

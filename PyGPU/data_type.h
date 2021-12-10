@@ -77,6 +77,7 @@ enum DataType {
     Float32,
     Float64,
     Complex64,
+    Complex128,
     DataTypesEnd
 };
 
