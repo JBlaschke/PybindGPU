@@ -113,6 +113,9 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
                 return a_ptr;
             }
         )
+        .def("print_address",
+            & ptr_wrapper<typename SpecT<DataIdx>::type>::print_address
+        )
         .def("__repr__",
             [](const ptr_wrapper<typename SpecT<DataIdx>::type> & a) {
                 return "<ptr_wrapper<"
@@ -186,6 +189,9 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
                 using dtype = typename SpecT<DataIdx>::type;
                 return ptr_wrapper<dtype>(a.device_data(), false);
             }
+        )
+        .def("allocated",
+            & DeviceArray<typename SpecT<DataIdx>::type>::allocated
         )
     );
 }

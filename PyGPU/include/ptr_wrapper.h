@@ -3,6 +3,7 @@
 
 
 #include <cstdint>  // used by intptr_t
+#include <stdio.h>
 
 
 template <class T>
@@ -51,6 +52,11 @@ class ptr_wrapper {
 
         // Return safety status of pointer
         bool is_safe() const { return safe; }
+
+        // For debugging: print the pointer address
+        void print_address() {
+            printf("Address of ptr is %p\n", (void *) ptr);
+        }
 
     private:
         T * ptr;

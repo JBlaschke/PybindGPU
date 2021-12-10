@@ -23,36 +23,42 @@ class GPUArray(object):
         a = args[0]
 
         if isinstance(a, np.ndarray):
-            if a.dtype.name == "int16":
-                self._device_array = DeviceArray_int16(a)
+
+            if kwargs.get("copy", False):
+                self._hold = a.copy()
+            else:
+                self._hold = a
+
+            if self._hold.dtype.name == "int16":
+                self._device_array = DeviceArray_int16(self._hold)
                 self._dtypestr = "int16"
-            elif a.dtype.name == "int32":
-                self._device_array = DeviceArray_int32(a)
+            elif self._hold.dtype.name == "int32":
+                self._device_array = DeviceArray_int32(self._hold)
                 self._dtypestr = "int32"
-            elif a.dtype.name == "int64":
-                self._device_array = DeviceArray_int64(a)
+            elif self._hold.dtype.name == "int64":
+                self._device_array = DeviceArray_int64(self._hold)
                 self._dtypestr = "int64"
-            elif a.dtype.name == "uint16":
-                self._device_array = DeviceArray_uint16(a)
+            elif self._hold.dtype.name == "uint16":
+                self._device_array = DeviceArray_uint16(self._hold)
                 self._dtypestr = "uint16"
-            elif a.dtype.name == "uint32":
-                self._device_array = DeviceArray_uint32(a)
+            elif self._hold.dtype.name == "uint32":
+                self._device_array = DeviceArray_uint32(self._hold)
                 self._dtypestr = "uint32"
-            elif a.dtype.name == "uint64":
-                self._device_array = DeviceArray_uint64(a)
+            elif self._hold.dtype.name == "uint64":
+                self._device_array = DeviceArray_uint64(self._hold)
                 self._dtypestr = "uint64"
-            elif a.dtype.name == "float32":
-                self._device_array = DeviceArray_float32(a)
+            elif self._hold.dtype.name == "float32":
+                self._device_array = DeviceArray_float32(self._hold)
                 self._dtypestr = "float32"
-            elif a.dtype.name == "float64":
-                self._device_array = DeviceArray_float64(a)
+            elif self._hold.dtype.name == "float64":
+                self._device_array = DeviceArray_float64(self._hold)
                 self._dtypestr = "float64"
-            elif a.dtype.name == "complex64":
-                self._device_array = DeviceArray_complex64(a)
+            elif self._hold.dtype.name == "complex64":
+                self._device_array = DeviceArray_complex64(self._hold)
                 self._dtypestr = "complex64"
             else:
                 raise UnsupportedDataType(
-                    f"Data type: {a.dtype.name} is not supported!"
+                    f"Data type: {self._hold.dtype.name} is not supported!"
                 )
 
         elif isinstance(a, tuple) or isinstance(a, list):
@@ -130,7 +136,8 @@ class GPUArray(object):
         PyCDUA compatibility: .ptr returns and integer representation of the
         device pointer.
         """
-        print("PTR PTR PTR:", self.device_data.__int__())
+        # print("PTR PTR PTR:", self.device_data.__int__(), flush=True)
+        # print("allocated:", self._device_array.allocated(), flush=True)
         return self.device_data.__int__()
 
 
@@ -139,11 +146,11 @@ class GPUArray(object):
         PyCUDA compatibility: .get() transfers data back to host and generates
         a numpy array out of the host buffer.
         """
-        print("HI THERE!", flush=True)
+        # print("HI THERE!", flush=True)
         self._device_array.to_host()
-        print("HO THERE!", flush=True)
+        # print("HO THERE!", flush=True)
         a = np.array(self._device_array)
-        print("HO HO!", flush=True)
+        # print("HO HO!", flush=True)
         return a
 
 
@@ -151,6 +158,8 @@ class GPUArray(object):
         """
         Returns a CUDA Array Interface dictionary describing this array's data.
         """
+        # print("__cuda_array_interface__", flush=True)
+
         return {
             "shape": self.shape,
             "strides": self.strides,

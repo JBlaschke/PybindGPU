@@ -55,7 +55,9 @@ class DeviceArray {
             m_strides[0] = sizeof(T);
             // allocate data
             host_ptr = new T[size];
+            // allocation status
             host_allocated = true;
+            device_allocated = false;
         };
 
         DeviceArray(T * data_ptr, ssize_t size)
@@ -66,7 +68,9 @@ class DeviceArray {
             m_strides[0] = sizeof(T);
             // transfer data
             host_ptr = data_ptr;
+            // allocation status
             host_allocated = false;
+            device_allocated = false;
         };
 
         DeviceArray(std::vector<ssize_t> & shape)
@@ -86,7 +90,9 @@ class DeviceArray {
             }
             // allocate data
             host_ptr = new T[m_size];
+            // allocation status
             host_allocated = true;
+            device_allocated = false;
         };
 
         DeviceArray(T * data_ptr, std::vector<ssize_t> & shape)
@@ -106,7 +112,9 @@ class DeviceArray {
             }
             // transfer data
             host_ptr = data_ptr;
+            // allocation status
             host_allocated = false;
+            device_allocated = false;
         };
 
         ~DeviceArray() {
@@ -125,7 +133,7 @@ class DeviceArray {
             if (!device_allocated) return;
 
             status = cudaMemcpy(
-                device_ptr, host_ptr, m_size, cudaMemcpyHostToDevice
+                device_ptr, host_ptr, m_size*sizeof(T), cudaMemcpyHostToDevice
             );
         }
 
@@ -133,7 +141,7 @@ class DeviceArray {
             if (!device_allocated) return;
 
             status = cudaMemcpy(
-                host_ptr, device_ptr, m_size, cudaMemcpyDeviceToHost
+                host_ptr, device_ptr, m_size*sizeof(T), cudaMemcpyDeviceToHost
             );
         }
 
