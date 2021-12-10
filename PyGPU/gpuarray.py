@@ -26,11 +26,6 @@ class GPUArray(object):
         else:
             a = args[0]
 
-        print("----------- INIT -----------", flush=True)
-        print(args)
-        print(kwargs, flush=True)
-
-
         if isinstance(a, np.ndarray):
 
             if kwargs.get("copy", False):
@@ -117,12 +112,7 @@ class GPUArray(object):
                 "input must either a numpy array -- or a list, or a tuple"
             )
 
-        print("HOHOHOHOHOHOHOHOHOHOHOHO", flush=True)
-
-
         self._device_array.allocate()
-
-        print("----------------------------", flush=True)
 
 
     @property
@@ -164,11 +154,8 @@ class GPUArray(object):
         PyCUDA compatibility: .get() transfers data back to host and generates
         a numpy array out of the host buffer.
         """
-        # print("HI THERE!", flush=True)
         self._device_array.to_host()
-        # print("HO THERE!", flush=True)
         a = np.array(self._device_array)
-        # print("HO HO!", flush=True)
         return a
 
 
@@ -215,7 +202,6 @@ class GPUArray(object):
         # __getitme__ function from numpy, which make unnecessary copies, so
         # this is very much just a HACK!
 
-        print("--------- GETITEM ----------", flush=True)
         self.to_host()  # Send data to host
 
         host_cpy = np.array(self._device_array).copy()
@@ -223,9 +209,6 @@ class GPUArray(object):
 
         device_new = GPUArray(host_idx, copy=True)
         device_new.to_device()  # Send data back to device
-
-        print("----------------------------", flush=True)
-
 
         return device_new
 

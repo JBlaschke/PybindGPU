@@ -64,9 +64,6 @@ class DeviceArray {
             // that has just been moved to this instance
             o.host_allocated = false;
             o.device_allocated = false;
-
-            printf("Taken ownership of DEVICE: %p\n", (void *) device_ptr);
-            printf("Taken ownership of HOST: %p\n", (void *) host_ptr);
         }
 
         DeviceArray(ssize_t size)
@@ -115,9 +112,6 @@ class DeviceArray {
             // allocation status
             host_allocated = true;
             device_allocated = false;
-
-            printf("HOST Allocated: %p, %d\n", (void *) host_ptr, m_size);
-            fflush(stdout);
         };
 
         DeviceArray(T * data_ptr, std::vector<ssize_t> & shape)
@@ -140,22 +134,14 @@ class DeviceArray {
             // allocation status
             host_allocated = false;
             device_allocated = false;
-
-            printf("HOST Allocated: %p, %d\n", (void *) host_ptr, m_size);
-            fflush(stdout);
         };
 
         ~DeviceArray() {
-            printf("DESTRUCTOR entered\n");
-            if (host_allocated) {
-                printf("DESTRUCTOR CALLED ON: %p\n", (void *) host_ptr);
+            if (host_allocated)
                 delete host_ptr;
-            }
-            if (device_allocated) {
-                printf("DESTRUCTOR CALLED ON: %p\n", (void *) device_ptr);
+
+            if (device_allocated)
                 status = cudaFree(device_ptr);
-            }
-            fflush(stdout);
         }
 
         void allocate() {
@@ -163,16 +149,10 @@ class DeviceArray {
 
             status = cudaMalloc(& device_ptr, m_size*sizeof(T));
             device_allocated = true;
-
-            printf("DEVICE Allocated: %p, %d\n", (void *) device_ptr, m_size);
-            fflush(stdout);
         }
 
         void to_device() {
             if (!device_allocated) return;
-
-            printf("TO DEVICE: %p->%p, %d\n", (void *) host_ptr, (void *) device_ptr, m_size);
-            fflush(stdout);
 
             status = cudaMemcpy(
                 device_ptr, host_ptr, m_size*sizeof(T), cudaMemcpyHostToDevice
@@ -181,9 +161,6 @@ class DeviceArray {
 
         void to_host() {
             if (!device_allocated) return;
-
-            printf("TO HOST: %p->%p, %d\n", (void *) device_ptr, (void *) host_ptr, m_size);
-            fflush(stdout);
 
             status = cudaMemcpy(
                 host_ptr, device_ptr, m_size*sizeof(T), cudaMemcpyDeviceToHost
