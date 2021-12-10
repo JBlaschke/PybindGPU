@@ -46,7 +46,6 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cuComplex.h>
-#include <cufft.h>
 
 #endif
 
