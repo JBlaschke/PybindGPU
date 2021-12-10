@@ -26,7 +26,7 @@ PYBIND11_MODULE(backend, m) {
         );
 
     // This needs to be defined so that the ptr_wrapper has something to return
-    py::class_<ptr_wrapper<CUevent_st * >>(m, "_CUevent_st__ptr");
+    py::class_<ptr_wrapper<cudaEvent_t>>(m, "_CUevent_st__ptr");
 
     py::class_<CudaEvent>(m, "cudaEvent_t")
         .def(py::init<>())
