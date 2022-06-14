@@ -1,4 +1,4 @@
-# PyGPU
+# PybindGPU
 
 Light-weight python bindings to control GPUs. This is intended to be a very
 lightweight alternative to `PyCUDA`, or `CuPy`, as well as working on AMD GPUs.
