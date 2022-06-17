@@ -1,9 +1,12 @@
 CXX      := g++
-NVCXX    := nvcc
+NVCXX    := hipcc
 CXXSTD   := -std=c++14
-CXXFLAGS := $(CXXSTD) -O3 -arch=sm_70 -I.
-NVOPTS   := --compiler-options -fPIC 
-LDFLAGS  := -lcuda
+# CXXFLAGS := $(CXXSTD) -O3 -arch=sm_70 -I.
+# NVOPTS   := --compiler-options -fPIC 
+# LDFLAGS  := -lcuda
+CXXFLAGS := $(CXXSTD) -DUSE_HIP -O3 --amdgpu-target=gfx908 -I.
+NVOPTS   := -fPIC -fgpu-rdc
+LDFLAGS  :=
 INCLUDES := $(shell python -m pybind11 --includes) -Iinclude
 PYSUFFIX := $(shell python3-config --extension-suffix)
 
