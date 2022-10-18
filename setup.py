@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 import os
 import sys
 import pybind11
@@ -112,24 +111,13 @@ if __name__ == "__main__":
     CUDA = locate_cuda()
 
     if CUDA == None:
-        ext_modules = [
-            Extension(
-                "PyNVTX_backend",
-                sorted(glob(join("PyNVTX", "*.cpp"))),
-                # this syntax is specific to this build system we're only going
-                # to use certain compiler args with nvcc and not with gcc the
-                # implementation of this trick is in customize_compiler() below
-                extra_compile_args={"gcc": [],},
-                include_dirs=["PyNVTX"]
-                            + [pybind11.get_include(True ),
-                               pybind11.get_include(False)]
-            )
-        ]
+        raise RuntimeError("`nvcc` is required to compile PybindCUDA")
     else:
         ext_modules = [
             Extension(
-                "PyNVTX_backend",
-                sorted(glob(join("PyNVTX", "*.cu"))),
+                "PybindGPU.backend",
+                sorted(glob(join("PybindGPU", "*.cpp")))
+                + sorted(glob(join("PybindGPU", "*.cu"))),
                 library_dirs=[CUDA["lib64"]],
                 libraries=["cudart", "nvToolsExt"],
                 runtime_library_dirs=[CUDA["lib64"]],
@@ -140,30 +128,17 @@ if __name__ == "__main__":
                 #                     "nvcc": ["-arch=sm_20", "--ptxas-options=-v",
                 #                              "-c", "--compiler-options", "'-fPIC'"]},
                 extra_compile_args={"gcc": [],
-                                    "nvcc": ["-std=c++11", "-O3", "-shared",
+                                    "nvcc": ["-std=c++14", "-O3", "-shared",
                                              "--compiler-options", "-fPIC",
                                              "-lnvToolsExt",]},
-                include_dirs=[CUDA["include"], "PyNVTX"]
-                            + [pybind11.get_include(True ),
-                               pybind11.get_include(False)]
-            )
-        ]
-
-    # We're in sdist mode => overwite extension module to include ALL sources
-    if "sdist" in sys.argv:
-        print(" *** ATTENTION: Running in sdist mode -- both CUDA and non-CUDA sources packaged to dist/")
-        ext_modules = [
-            Extension(
-                "PyNVTX_backend",
-                sorted(glob(join("PyNVTX", "*.cpp")))
-                + sorted(glob(join("PyNVTX", "*.cu"))),
-                # this syntax is specific to this build system we're only going
-                # to use certain compiler args with nvcc and not with gcc the
-                # implementation of this trick is in customize_compiler() below
-                extra_compile_args={"gcc": [],},
-                include_dirs=["PybindPGU"]
-                            + [pybind11.get_include(True ),
-                               pybind11.get_include(False)]
+                include_dirs=[
+                        CUDA["include"],
+                        "PybindGPU",
+                        join("PybindGPU", "include")
+                    ] + [
+                        pybind11.get_include(True ),
+                        pybind11.get_include(False)
+                    ]
             )
         ]
 
@@ -179,7 +154,7 @@ if __name__ == "__main__":
         ext_modules=ext_modules,
         long_description=long_description,
         long_description_content_type="text/markdown",
-        url="https://github.com/JBlaschke/PyNVTX",
+        url="https://github.com/JBlaschke/PybindGPU",
         packages=setuptools.find_packages(),
         classifiers=[
             "Programming Language :: Python :: 3",
