@@ -3,3 +3,7 @@ __pycache__/
 *.so
 *.o
 *.qdrep
+
+PybindGPU.egg-info/
+dist/
+build/

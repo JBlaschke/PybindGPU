@@ -193,16 +193,16 @@ class DeviceArray {
         }
 
     private:
-        bool host_allocated;
-        bool device_allocated;
-
         ssize_t m_size;
-        int m_ndim;
         std::vector<ssize_t> m_shape;
+        int m_ndim;
         std::vector<ssize_t> m_strides;
 
         T * host_ptr;
         T * device_ptr;
+
+        bool device_allocated;
+        bool host_allocated;
 
         cudaError_t status;
 };

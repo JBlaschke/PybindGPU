@@ -127,10 +127,11 @@ if __name__ == "__main__":
                 # extra_compile_args={"gcc": [],
                 #                     "nvcc": ["-arch=sm_20", "--ptxas-options=-v",
                 #                              "-c", "--compiler-options", "'-fPIC'"]},
-                extra_compile_args={"gcc": [],
+                extra_compile_args={"gcc": ["-std=c++14", "-O3", "-shared",
+                                            "-fPIC"],
                                     "nvcc": ["-std=c++14", "-O3", "-shared",
                                              "--compiler-options", "-fPIC",
-                                             "-lnvToolsExt",]},
+                                             "-lnvToolsExt"]},
                 include_dirs=[
                         CUDA["include"],
                         "PybindGPU",
