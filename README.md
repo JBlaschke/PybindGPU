@@ -119,8 +119,16 @@ Note: the `prt_wrapper` template is available here:
 
 ## Installation
 
-WIP. Currenly only avaialble via makefile. Be sure to point the `sys.path` to
-where you compiled this module.
+Will be uploaded to PyPI soon -- in the meantime:
+
+* For CUDA:
+```
+pip install -e .
+```
+* For HIP you must specify the GPU target -- eg on OLC Crusher:
+```
+PYBIND_GPU_TARGET=gfx908 pip install -e .
+```
 
 ## Why?!
 
