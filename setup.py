@@ -230,8 +230,8 @@ def make_extension():
         includes.append(ROCM["include"])
         extra_compile_args={
             "gcc": ["-std=c++14", "-O3", "-shared", "-fPIC", "-DUSE_HIP"],
-            "hipcc": ["-std=c++14", "-O3", "-shared", "-fPIC", "-fgpu-rdc",
-                      "-DUSE_HIP"]
+            "hipcc": ["-std=c++14", "-O3", "-fPIC", "-fgpu-rdc", "-DUSE_HIP",
+                      f"--amdgpu-target=${HIP_TARGET}"]
         }
 
     return Extension(
@@ -277,6 +277,13 @@ if __name__ == "__main__":
             BACKEND = BuildType.CUDA
         elif ROCM is not None:
             BACKEND = BuildType.ROCM
+
+    if BACKEND == BuildType.ROCM:
+        if "PYBIND_GPU_TARGET" not in os.environ:
+            raise RuntimeError(
+                "You must specify a $PYBIND_GPU_TARGET when building for ROCM."
+            )
+        HIP_TARGET = os.environ["PYBIND_GPU_TARGET"]
 
     with open("README.md", "r") as fh:
         long_description = fh.read()
