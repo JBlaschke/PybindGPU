@@ -134,15 +134,15 @@ def customize_compiler_for_nvcc(self):
     default_compiler_so = self.compiler_so
     super = self._compile
 
-    # Now redefine the _compile method. This gets executed for each
-    # object but distutils doesn't have the ability to change compilers
-    # based on source extension: we add it.
+    # Now redefine the _compile method. This gets executed for each object but
+    # distutils doesn't have the ability to change compilers based on source
+    # extension: we add it.
     def _compile(obj, src, ext, cc_args, extra_postargs, pp_opts):
         if os.path.splitext(src)[1] == ".cu":
             # use the cuda for .cu files
             self.set_executable("compiler_so", CUDA["nvcc"])
-            # use only a subset of the extra_postargs, which are 1-1
-            # translated from the extra_compile_args in the Extension class
+            # use only a subset of the extra_postargs, which are 1-1 translated
+            # from the extra_compile_args in the Extension class
             postargs = extra_postargs["nvcc"]
         else:
             postargs = extra_postargs["gcc"]
@@ -172,20 +172,22 @@ def customize_compiler_for_rocm(self):
     default_compiler_so = self.compiler_so
     super = self._compile
 
-    # Now redefine the _compile method. This gets executed for each
-    # object but distutils doesn't have the ability to change compilers
-    # based on source extension: we add it.
+    # Now redefine the _compile method. This gets executed for each object but
+    # distutils doesn't have the ability to change compilers based on source
+    # extension: we add it.
     def _compile(obj, src, ext, cc_args, extra_postargs, pp_opts):
         if os.path.splitext(src)[1] == ".cu":
             # use the cuda for .cu files
             self.set_executable("compiler_so", ROCM["hipcc"])
-            # use only a subset of the extra_postargs, which are 1-1
-            # translated from the extra_compile_args in the Extension class
+            # use only a subset of the extra_postargs, which are 1-1 translated
+            # from the extra_compile_args in the Extension class
+            postargs = extra_postargs["hipcc"]
+        elif os.path.splitext(src)[1] == ".cpp":
+            # also use ROCM to build C++ source files:
+            self.set_executable("compiler_so", ROCM["hipcc"])
             postargs = extra_postargs["hipcc"]
         else:
             postargs = extra_postargs["gcc"]
-            # self.set_executable("compiler_so", ROCM["hipcc"])
-            # postargs = extra_postargs["hipcc"]
 
         super(obj, src, ext, cc_args, postargs, pp_opts)
         # Reset the default compiler_so, which we might have changed for cuda
@@ -232,6 +234,7 @@ def make_extension():
         includes.append(ROCM["include"])
         extra_compile_args={
             "gcc": ["-std=c++14", "-O3", "-shared", "-fPIC", "-DUSE_HIP",
+                    "-D__HIP_PLATFORM_AMD__"],
             "hipcc": ["-std=c++14", "-O3", "-fPIC", "-fgpu-rdc", "-DUSE_HIP",
                       f"--amdgpu-target={HIP_TARGET}"]
         }
