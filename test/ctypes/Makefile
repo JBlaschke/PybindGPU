@@ -3,7 +3,7 @@ NVCXX    := nvcc
 CXXSTD   := -std=c++14
 CXXFLAGS := $(CXXSTD) -O3 -arch=sm_70 -I.
 NVOPTS   := --compiler-options -fPIC 
-INCLUDES := -IPyGPU -IPyGPU/include
+INCLUDES := -I../../PybindGPU -I../../PybindGPU/include
 
 all: test_ctypes.so
 

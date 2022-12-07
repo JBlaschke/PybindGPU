@@ -1,7 +1,7 @@
 from sys import path
 
 import numpy as np
-import PyGPU as gpuarray
+import PybindGPU as gpuarray
 
 from cufinufft import cufinufft
 

@@ -7,7 +7,7 @@ from ctypes import c_float
 from ctypes import c_void_p
 
 import numpy as np
-import PyGPU as gpuarray
+import PybindGPU as gpuarray
 
 # Create ctypes wrappers of the ctypes test functions
 
