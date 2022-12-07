@@ -231,7 +231,7 @@ def make_extension():
         extra_compile_args={
             "gcc": ["-std=c++14", "-O3", "-shared", "-fPIC", "-DUSE_HIP"],
             "hipcc": ["-std=c++14", "-O3", "-fPIC", "-fgpu-rdc", "-DUSE_HIP",
-                      f"--amdgpu-target=${HIP_TARGET}"]
+                      f"--amdgpu-target={HIP_TARGET}"]
         }
 
     return Extension(
