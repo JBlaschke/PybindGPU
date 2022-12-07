@@ -183,7 +183,9 @@ def customize_compiler_for_rocm(self):
             # translated from the extra_compile_args in the Extension class
             postargs = extra_postargs["hipcc"]
         else:
-            postargs = extra_postargs["gcc"]
+            # postargs = extra_postargs["gcc"]
+            self.set_executable("compiler_so", ROCM["hipcc"])
+            postargs = extra_postargs["hipcc"]
 
         super(obj, src, ext, cc_args, postargs, pp_opts)
         # Reset the default compiler_so, which we might have changed for cuda
@@ -229,8 +231,8 @@ def make_extension():
         libraries = ["amdhip64"]
         includes.append(ROCM["include"])
         extra_compile_args={
-            "gcc": ["-std=c++14", "-O3", "-shared", "-fPIC", "-DUSE_HIP",
-                    f"--amdgpu-target={HIP_TARGET}"],
+            #"gcc": ["-std=c++14", "-O3", "-shared", "-fPIC", "-DUSE_HIP",
+            #        f"--amdgpu-target={HIP_TARGET}"],
             "hipcc": ["-std=c++14", "-O3", "-fPIC", "-fgpu-rdc", "-DUSE_HIP",
                       f"--amdgpu-target={HIP_TARGET}"]
         }
