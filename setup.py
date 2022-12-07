@@ -277,36 +277,6 @@ if __name__ == "__main__":
         elif ROCM is not None:
             BACKEND = BuildType.ROCM
 
-    # if CUDA == None:
-    #     raise RuntimeError("`nvcc` is required to compile PybindCUDA")
-    # else:
-    #     ext_modules = [
-    #         Extension(
-    #             "PybindGPU.backend",
-    #             sorted(glob(join("PybindGPU", "*.cpp")))
-    #             + sorted(glob(join("PybindGPU", "*.cu"))),
-    #             library_dirs=[CUDA["lib64"]],
-    #             libraries=["cudart", "nvToolsExt"],
-    #             runtime_library_dirs=[CUDA["lib64"]],
-    #             # this syntax is specific to this build system we're only going
-    #             # to use certain compiler args with nvcc and not with gcc the
-    #             # implementation of this trick is in customize_compiler() below
-    #             extra_compile_args={"gcc": ["-std=c++14", "-O3", "-shared",
-    #                                         "-fPIC"],
-    #                                 "nvcc": ["-std=c++14", "-O3", "-shared",
-    #                                          "--compiler-options", "-fPIC",
-    #                                          "-lnvToolsExt"]},
-    #             include_dirs=[
-    #                     CUDA["include"],
-    #                     "PybindGPU",
-    #                     join("PybindGPU", "include")
-    #                 ] + [
-    #                     pybind11.get_include(True ),
-    #                     pybind11.get_include(False)
-    #                 ]
-    #         )
-    #     ]
-
     with open("README.md", "r") as fh:
         long_description = fh.read()
 
