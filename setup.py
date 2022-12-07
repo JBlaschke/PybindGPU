@@ -229,7 +229,8 @@ def make_extension():
         libraries = ["amdhip64"]
         includes.append(ROCM["include"])
         extra_compile_args={
-            "gcc": ["-std=c++14", "-O3", "-shared", "-fPIC", "-DUSE_HIP"],
+            "gcc": ["-std=c++14", "-O3", "-shared", "-fPIC", "-DUSE_HIP",
+                    f"--amdgpu-target={HIP_TARGET}"],
             "hipcc": ["-std=c++14", "-O3", "-fPIC", "-fgpu-rdc", "-DUSE_HIP",
                       f"--amdgpu-target={HIP_TARGET}"]
         }
