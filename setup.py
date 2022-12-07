@@ -227,7 +227,7 @@ def make_extension():
     elif BACKEND == BuildType.ROCM:
         lib_dir = ROCM["lib"]
         libraries = ["amdhip64"]
-        includes.append(HIP["include"]) 
+        includes.append(ROCM["include"])
         extra_compile_args={
             "gcc": ["-std=c++14", "-O3", "-shared", "-fPIC", "-DUSE_HIP"],
             "hipcc": ["-std=c++14", "-O3", "-shared", "-fPIC", "-fgpu-rdc"]
