@@ -230,7 +230,8 @@ def make_extension():
         includes.append(ROCM["include"])
         extra_compile_args={
             "gcc": ["-std=c++14", "-O3", "-shared", "-fPIC", "-DUSE_HIP"],
-            "hipcc": ["-std=c++14", "-O3", "-shared", "-fPIC", "-fgpu-rdc"]
+            "hipcc": ["-std=c++14", "-O3", "-shared", "-fPIC", "-fgpu-rdc",
+                      "-DUSE_HIP"]
         }
 
     return Extension(
