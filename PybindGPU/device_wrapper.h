@@ -4,11 +4,20 @@
 #include <iostream>
 #include <vector>
 #include <numeric>
+#include <ptr_wrapper.h>
+#include <device_wrapper.h>
 #include <cuda_hip_wrapper.h>
 #include <pybind11/pybind11.h>
 
 
 namespace py = pybind11;
+
+struct CudaError : public obj_wrapper<cudaError_t> {
+
+    CudaError(int a_error) : obj_wrapper(static_cast<cudaError_t>(a_error)) {};
+
+    int as_int() const;
+};
 
 
 class CudaEvent {

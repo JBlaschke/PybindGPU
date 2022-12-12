@@ -55,15 +55,6 @@ template <size_t data_type>
 struct DataTypeSpecialization;
 
 
-
-struct CudaError : public obj_wrapper<cudaError_t> {
-
-    CudaError(int a_error) : obj_wrapper(static_cast<cudaError_t>(a_error)) {};
-
-    int as_int() const;
-};
-
-
 namespace py = pybind11;
 
 

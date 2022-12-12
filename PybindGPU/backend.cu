@@ -1,6 +1,7 @@
 #include <data_type.h>
 #include <ptr_wrapper.h>
 #include <device_wrapper.h>
+#include <device_properties.h>
 #include <cuda_hip_wrapper.h>
 #include <pybind11/pybind11.h>
 
@@ -56,7 +57,6 @@ PYBIND11_MODULE(backend, m) {
             }
         );
 
-
     m.def(
         "cudaDeviceReset",
         []() {
@@ -64,14 +64,12 @@ PYBIND11_MODULE(backend, m) {
         }
     );
 
-
     m.def(
         "cudaDeviceSynchronize",
         []() {
             return CudaError(cudaDeviceSynchronize());
         }
     );
-
 
     m.def(
         "cudaEventElapsedTime",
@@ -82,14 +80,12 @@ PYBIND11_MODULE(backend, m) {
         }
     );
 
-
     m.def(
         "cudaEventRecord",
         [](CudaEvent & event) {
             return CudaError(cudaEventRecord(* event, 0));
         }
     );
-
 
     m.def(
         "cudaEventRecord",
@@ -98,14 +94,12 @@ PYBIND11_MODULE(backend, m) {
         }
     );
 
-
     m.def(
         "cudaEventSynchronize",
         [](CudaEvent & event) {
             return CudaError(cudaEventSynchronize(* event));
         }
     );
-
 
     m.def(
         "cudaGetDevice",
@@ -116,14 +110,12 @@ PYBIND11_MODULE(backend, m) {
         }
     );
 
-
     m.def(
         "cudaSetDevice",
         [](int device) {
             return CudaError(cudaSetDevice(device));
         }
     );
-
 
     m.def(
         "cudaGetErrorName",
@@ -132,14 +124,12 @@ PYBIND11_MODULE(backend, m) {
         }
     );
 
-
     m.def(
         "cudaGetErrorString",
         [](CudaError & error) {
             return std::string(cudaGetErrorString(* error));
         }
     );
-
 
     m.def(
         "cudaGetLastError",
@@ -148,6 +138,59 @@ PYBIND11_MODULE(backend, m) {
         }
     );
 
+    // This needs to be defined so that the ptr_wrapper has something to return
+    py::class_<ptr_wrapper<cudaDeviceProp>>(m, "_CudaDeviceProp__ptr");
+
+    py::class_<DeviceProperties>(m, "cudaDeviceProp")
+        .def(py::init<int>())
+        .def("get",
+            [](DeviceProperties & a) {
+                return ptr_wrapper<cudaDeviceProp>(a.get());
+            }
+        )
+        .def("name",
+            [](DeviceProperties & a) {
+                std::string s(a.get()->name);
+                return s;
+            }
+        )
+        .def("uuid",
+            [](DeviceProperties & a) {
+                std::string s = mem_to_string(
+                    reinterpret_cast<void *>(& a.get()->uuid), 16
+                );
+                return s;
+            }
+        )
+        .def("pciBusID",
+            [](DeviceProperties & a) {
+                return a.get()->pciBusID;
+            }
+        )
+        .def("pciDeviceID",
+            [](DeviceProperties & a) {
+                return a.get()->pciBusID;
+            }
+        )
+        .def("pciDomainID",
+            [](DeviceProperties & a) {
+                return a.get()->pciBusID;
+            }
+        )
+        .def("last_status",
+            [](const DeviceProperties & a) {
+                return CudaError(a.last_status());
+            }
+        );
+
+        m.def(
+            "cudaGetDeviceCount",
+            []() {
+                int device;
+                cudaError_t err = cudaGetDeviceCount(& device);
+                return std::make_tuple(device, CudaError(err));
+            }
+        );
 
     m.attr("major_version")   = py::int_(0);
     m.attr("minor_version")   = py::int_(1);

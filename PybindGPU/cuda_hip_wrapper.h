@@ -36,6 +36,9 @@
 #define cudaStreamDestroy hipStreamDestroy
 #define cudaStream_t hipStream_t
 #define cudaSuccess hipSuccess
+#define cudaDeviceProp hipDeviceProp_t
+#define cudaGetDeviceProperties hipGetDeviceProperties
+#define cudaGetDeviceCount hipGetDeviceCount
 
 // cuComplex.h adapters
 #define cuDoubleComplex hipDoubleComplex
