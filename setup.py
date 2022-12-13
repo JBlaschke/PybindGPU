@@ -295,7 +295,7 @@ if __name__ == "__main__":
 
     setup(
         name="PybindGPU",
-        version="0.1.1",
+        version="0.2.0",
         author="Johannes Blaschke",
         author_email="johannes@blaschke.science",
         description="",
