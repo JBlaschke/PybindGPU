@@ -195,7 +195,7 @@ PYBIND11_MODULE(backend, m) {
         );
 
     m.attr("major_version")   = py::int_(0);
-    m.attr("minor_version")   = py::int_(1);
+    m.attr("minor_version")   = py::int_(2);
     m.attr("release_version") = py::int_(0);
 
     // Let the user know that this backend has been compiled _with_ CUDA support
