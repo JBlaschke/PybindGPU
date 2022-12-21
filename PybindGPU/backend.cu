@@ -154,6 +154,7 @@ PYBIND11_MODULE(backend, m) {
                 return s;
             }
         )
+#ifndef USE_HIP
         .def("uuid",
             [](DeviceProperties & a) {
                 std::string s = mem_to_string(
@@ -162,6 +163,7 @@ PYBIND11_MODULE(backend, m) {
                 return s;
             }
         )
+#endif
         .def("pciBusID",
             [](DeviceProperties & a) {
                 return a.get()->pciBusID;
