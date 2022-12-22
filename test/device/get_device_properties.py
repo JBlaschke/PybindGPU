@@ -9,8 +9,8 @@ for i in range(n_device):
     prop = PybindGPU.cudaDeviceProp(i)
     print(f"Device {i}:")
     print(f" | name = {prop.name()}")
-    # Awaits ifndef kind of condition for HIP
-    #print(f" | uuid = {prop.uuid()}") 
+    if not PybindGPU.use_hip:
+        print(f" | uuid = {prop.uuid()}")
     print(f" | pciBusID = {prop.pciBusID()}")
     print(f" | pciDeviceID = {prop.pciDeviceID()}")
     print(f" `-pciDomainID = {prop.pciDomainID()}")
