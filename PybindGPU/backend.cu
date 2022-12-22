@@ -154,6 +154,7 @@ PYBIND11_MODULE(backend, m) {
                 return s;
             }
         )
+#ifndef USE_HIP
         .def("uuid",
             [](DeviceProperties & a) {
                 std::string s = mem_to_string(
@@ -162,6 +163,7 @@ PYBIND11_MODULE(backend, m) {
                 return s;
             }
         )
+#endif
         .def("pciBusID",
             [](DeviceProperties & a) {
                 return a.get()->pciBusID;
@@ -194,8 +196,15 @@ PYBIND11_MODULE(backend, m) {
 
     m.attr("major_version")   = py::int_(0);
     m.attr("minor_version")   = py::int_(2);
-    m.attr("release_version") = py::int_(0);
+    m.attr("release_version") = py::int_(1);
+
+    // Let the user know if PybindGPU has been built in HIP mode instead of CUDA
+#ifdef USE_HIP
+    m.attr("use_hip") = py::bool_(true);
+#else
+    m.attr("use_hip") = py::bool_(false);
+#endif
 
     // Let the user know that this backend has been compiled _with_ CUDA support
-    m.attr("cuda_enabled")            = py::bool_(true);
+    m.attr("cuda_enabled") = py::bool_(true);
 }

@@ -1,17 +1,14 @@
 CXX      := g++
-NVCXX    := hipcc
+NVCXX    := nvcc
 CXXSTD   := -std=c++14
-CXXFLAGS := $(CXXSTD) -DUSE_HIP -O3 --amdgpu-target=gfx90a -I.
-NVOPTS   := -fPIC -fgpu-rdc
-LDFLAGS  := -lhip
+CXXFLAGS := $(CXXSTD) -O3 -arch=sm_70 -I.
+NVOPTS   := --compiler-options -fPIC 
 INCLUDES := -I../../PybindGPU -I../../PybindGPU/include
 
 all: test_ctypes.so
-
 
 %.so: %.cu
 	$(NVCXX) -shared $(CXXFLAGS) $(NVOPTS) $(INCLUDES) $< -o $@
 
 clean:
 	rm *.so
-
