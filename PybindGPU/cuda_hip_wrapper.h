@@ -39,6 +39,8 @@
 #define cudaDeviceProp hipDeviceProp_t
 #define cudaGetDeviceProperties hipGetDeviceProperties
 #define cudaGetDeviceCount hipGetDeviceCount
+#define cudaMallocHost hipHostMalloc
+#define cudaFreeHost hipHostFree
 
 // cuComplex.h adapters
 #define cuDoubleComplex hipDoubleComplex

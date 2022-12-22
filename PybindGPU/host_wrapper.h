@@ -1,17 +1,70 @@
 #ifndef HOST_WRAPPER_H
 #define HOST_WRAPPER_H
 
+#include <iostream>
+
+
 template<class T, class E>
 class Allocator {
     public:
-        Allocator() : _ptr(NULL) {}
+        Allocator() : _ptr(NULL), _bytes(0), _owner(false) {
+            std::cout << "Using default constructor" << std::endl;
+        }
+        Allocator(const Allocator & o) : _ptr(o._ptr), _bytes(o._bytes) {
+            std::cout << "Using copy constructor" << std::endl;
+            _owner = false;
+        }
+        Allocator(Allocator && o) : _ptr(o._ptr), _bytes(o._bytes) {
+            std::cout << "Using move constructor" << std::endl;
+            if (o._owner) {
+                _owner   = true;
+                o._owner = false;
+            } else {
+                _owner = false;
+            }
+        }
+        ~Allocator() {
+            if (_owner) deallocate()
+        }
         virtual E allocate(size_t elts) {}
         virtual E deallocate() {}
         T * ptr() {return _ptr;}
-
     protected:
         T * _ptr;
         size_t _bytes;
+        bool _owner;
+};
+
+
+template<class T>
+class HostAllocator : public Allocator<T, void> {
+    public:
+        cudaError_t allocate(size_t elts) override {
+            std::cout << "Allocating on host" << std::endl;
+            _bytes = sizeof(T)*elts
+            _ptr = (T*) malloc(_bytes);
+        }
+
+        cudaError_t deallocate() override {
+            std:: << "Dellocating on host" << std::endl;
+            free(_ptr);
+        }
+};
+
+
+template<class T>
+class DeviceAllocator : public Allocator<T, cudaError_t> {
+    public:
+        cudaError_t allocate(size_t elts) override {
+            std::cout << "Allocating on device" << std::endl;
+            _bytes = sizeof(T)*elts
+            return cudaMalloc((void**) & _ptr, _bytes);
+        }
+
+        cudaError_t deallocate() override {
+            std::cout << "Deallocating on device" << std::endl;
+            return cudaFree(_ptr);
+        }
 };
 
 
@@ -19,13 +72,16 @@ template<class T>
 class PagelockedAllocator : public Allocator<T, cudaError_t> {
     public:
         cudaError_t allocate(size_t elts) override {
-
+            std::cout << "Allocating on pagelocked host" << std::endl;
+            _bytes = sizeof(T)*elts
+            return cudaMallocHost((void**) & _ptr, _bytes);
         }
 
         cudaError_t deallocate() override {
-
+            std::cout << "Deallocating on pagelocked host" << std::endl;
+            return cudaFreeHost(_ptr);
         }
-}
+};
 
 
 // template<class T>
