@@ -1,7 +1,8 @@
 from sys import path
 
 import numpy as np
-import PybindGPU as gpuarray
+import PybindGPU
+import PybindGPU.gpuarray as gpuarray
 
 from cufinufft import cufinufft
 
@@ -15,6 +16,7 @@ def _test_type1(dtype, shape=(16, 16, 16), M=4096, tol=1e-3):
 
     k = utils.gen_nu_pts(M, dim=dim).astype(dtype)
     c = utils.gen_nonuniform_data(M).astype(complex_dtype)
+
 
     k_gpu = gpuarray.to_gpu(k)
     c_gpu = gpuarray.to_gpu(c)
