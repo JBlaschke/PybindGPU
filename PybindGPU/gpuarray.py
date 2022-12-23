@@ -1,12 +1,13 @@
 import numpy as np
 
+from . import backend
 
 from .backend import dtype
-from .backend import \
-    DeviceArray_int16,    DeviceArray_int32,   DeviceArray_int64,\
-    DeviceArray_uint16,   DeviceArray_uint32,  DeviceArray_uint64,\
-    DeviceArray_float32,  DeviceArray_float64, DeviceArray_complex64,\
-    DeviceArray_complex128
+# from .backend import \
+#     DeviceArray_int16,    DeviceArray_int32,   DeviceArray_int64,\
+#     DeviceArray_uint16,   DeviceArray_uint32,  DeviceArray_uint64,\
+#     DeviceArray_float32,  DeviceArray_float64, DeviceArray_complex64,\
+#     DeviceArray_complex128
 
 
 SUPPORTED_DTYPES = tuple(dtype(i).name for i in range(dtype.__size__.value))
@@ -27,85 +28,38 @@ class GPUArray(object):
             a = args[0]
 
         if isinstance(a, np.ndarray):
-
             if kwargs.get("copy", False):
                 self._hold = a.copy()
             else:
                 self._hold = a
 
-            if self._hold.dtype.name == "int16":
-                self._device_array = DeviceArray_int16(self._hold)
-                self._dtypestr = "int16"
-            elif self._hold.dtype.name == "int32":
-                self._device_array = DeviceArray_int32(self._hold)
-                self._dtypestr = "int32"
-            elif self._hold.dtype.name == "int64":
-                self._device_array = DeviceArray_int64(self._hold)
-                self._dtypestr = "int64"
-            elif self._hold.dtype.name == "uint16":
-                self._device_array = DeviceArray_uint16(self._hold)
-                self._dtypestr = "uint16"
-            elif self._hold.dtype.name == "uint32":
-                self._device_array = DeviceArray_uint32(self._hold)
-                self._dtypestr = "uint32"
-            elif self._hold.dtype.name == "uint64":
-                self._device_array = DeviceArray_uint64(self._hold)
-                self._dtypestr = "uint64"
-            elif self._hold.dtype.name == "float32":
-                self._device_array = DeviceArray_float32(self._hold)
-                self._dtypestr = "float32"
-            elif self._hold.dtype.name == "float64":
-                self._device_array = DeviceArray_float64(self._hold)
-                self._dtypestr = "float64"
-            elif self._hold.dtype.name == "complex64":
-                self._device_array = DeviceArray_complex64(self._hold)
-                self._dtypestr = "complex64"
-            elif self._hold.dtype.name == "complex128":
-                self._device_array = DeviceArray_complex128(self._hold)
-                self._dtypestr = "complex128"
-            else:
+            self._dtypestr = self._hold.dtype.name
+            if self._dtypestr not in SUPPORTED_DTYPES:
                 raise UnsupportedDataType(
-                    f"Data type: {self._hold.dtype.name} is not supported!"
+                    f"Data type: {self._dtypestr} is not supported!"
                 )
+
+            array_constructor = getattr(
+                backend, "DeviceArray_" + self._dtypestr
+            )
+            self._device_array = array_constructor(self._hold)
 
         elif isinstance(a, tuple) or isinstance(a, list):
             a = list(a)  # make sure that a is a list (and not a tuple)
             dtype = kwargs.get("dtype", "float64")
+            if isinstance(dtype, type):
+                dtype = dtype.__name__
 
-            if dtype in ("int16", np.int16):
-                self._device_array = DeviceArray_int16(a)
-                self._dtypestr = "int16"
-            elif dtype in ("int32", np.int32):
-                self._device_array = DeviceArray_int32(a)
-                self._dtypestr = "int32"
-            elif dtype in ("int64", np.int64):
-                self._device_array = DeviceArray_int64(a)
-                self._dtypestr = "int64"
-            elif dtype in ("uint16", ):
-                self._device_array = DeviceArray_uint16(a)
-                self._dtypestr = "uint16"
-            elif dtype in ("uint32", ):
-                self._device_array = DeviceArray_uint32(a)
-                self._dtypestr = "uint32"
-            elif dtype in ("uint64", ):
-                self._device_array = DeviceArray_uint64(a)
-                self._dtypestr = "uint64"
-            elif dtype in ("float32", np.float32):
-                self._device_array = DeviceArray_float32(a)
-                self._dtypestr = "float32"
-            elif dtype in ("float64", np.float64):
-                self._device_array = DeviceArray_float64(a)
-                self._dtypestr = "float64"
-            elif dtype in ("complex64", np.complex64):
-                self._device_array = DeviceArray_complex64(a)
-                self._dtypestr = "complex64"
-            elif dtype in ("complex128", np.complex128):
-                self._device_array = DeviceArray_complex128(a)
-                self._dtypestr = "complex128"
-            else:
+            self._dtypestr = dtype 
+            if self._dtypestr not in SUPPORTED_DTYPES:
                 raise UnsupportedDataType(
-                    f"Data type: {dtype} is not supported!"
+                    f"Data type: {self._dtypestr} is not supported!"
                 )
+
+            array_constructor = getattr(
+                backend, "DeviceArray_" + self._dtypestr
+            )
+            self._device_array = array_constructor(a)
 
         else:
             raise UnsupportedDataType(
