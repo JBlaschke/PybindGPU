@@ -186,6 +186,16 @@ void generate_datatype(py::module & _mod, std::index_sequence<DataIdx ...>) {
             }
         ), py::return_value_policy::reference)
         .def(py::init(
+            [](ptr_wrapper<typename SpecT<DataIdx>::type> & a, py::list l) {
+                using dtype = typename SpecT<DataIdx>::type;
+                std::vector<ssize_t> shape(py::len(l));
+                for (size_t i = 0; i < shape.size(); i++) {
+                    shape[i] = l[i].cast<ssize_t>();
+                }
+                return DeviceArray<dtype>(a.get(), shape);
+            }
+        ), py::return_value_policy::reference)
+        .def(py::init(
             [](py::buffer b) {
                 py::buffer_info info = b.request();
                 using dtype = typename SpecT<DataIdx>::type;

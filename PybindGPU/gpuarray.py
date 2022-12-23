@@ -27,6 +27,12 @@ class GPUArray(object):
         else:
             a = args[0]
 
+        if "allocator" in kwargs:
+            self._allocator = kwargs["allocator"]
+            self._has_allocator = True
+        else:
+            self._has_allocator = False
+
         if isinstance(a, np.ndarray):
             if kwargs.get("copy", False):
                 self._hold = a.copy()
@@ -42,7 +48,10 @@ class GPUArray(object):
             array_constructor = getattr(
                 backend, "DeviceArray_" + self._dtypestr
             )
-            self._device_array = array_constructor(self._hold)
+            if self._has_allocator:
+                pass
+            else:
+                self._device_array = array_constructor(self._hold)
 
         elif isinstance(a, tuple) or isinstance(a, list):
             a = list(a)  # make sure that a is a list (and not a tuple)
@@ -59,7 +68,10 @@ class GPUArray(object):
             array_constructor = getattr(
                 backend, "DeviceArray_" + self._dtypestr
             )
-            self._device_array = array_constructor(a)
+            if self._has_allocator:
+                pass
+            else:
+                self._device_array = array_constructor(a)
 
         else:
             raise UnsupportedDataType(
@@ -158,7 +170,7 @@ class GPUArray(object):
 
         self.to_host()  # Send data to host
 
-        host_cpy = np.array(self._device_array).copy()
+        host_cpy = np.array(self._device_array).copy() # TODO: the copy function call could be replaced with the copy=True kwarg
         host_idx = host_cpy[index]  # Borrow __getitem__ from numpy
 
         device_new = GPUArray(host_idx, copy=True)
