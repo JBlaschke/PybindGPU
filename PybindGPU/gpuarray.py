@@ -1,14 +1,9 @@
+from math import prod
 import numpy as np
 
 from . import backend
 
 from .backend import dtype
-# from .backend import \
-#     DeviceArray_int16,    DeviceArray_int32,   DeviceArray_int64,\
-#     DeviceArray_uint16,   DeviceArray_uint32,  DeviceArray_uint64,\
-#     DeviceArray_float32,  DeviceArray_float64, DeviceArray_complex64,\
-#     DeviceArray_complex128
-
 
 SUPPORTED_DTYPES = tuple(dtype(i).name for i in range(dtype.__size__.value))
 
@@ -19,9 +14,7 @@ class UnsupportedDataType(Exception):
 
 
 class GPUArray(object):
-
     def __init__(self, *args, **kwargs):
-
         if "shape" in kwargs:
             a = kwargs["shape"]
         else:
@@ -115,13 +108,13 @@ class GPUArray(object):
         return self.device_data.__int__()
 
 
-    def get(self):
+    def get(self, copy=False):
         """
         PyCUDA compatibility: .get() transfers data back to host and generates
         a numpy array out of the host buffer.
         """
         self._device_array.to_host()
-        a = np.array(self._device_array)
+        a = np.array(self._device_array, copy=copy)
         return a
 
 
@@ -170,14 +163,13 @@ class GPUArray(object):
 
         self.to_host()  # Send data to host
 
-        host_cpy = np.array(self._device_array).copy() # TODO: the copy function call could be replaced with the copy=True kwarg
+        host_cpy = np.array(self._device_array, copy=False)
         host_idx = host_cpy[index]  # Borrow __getitem__ from numpy
 
-        device_new = GPUArray(host_idx, copy=True)
+        device_new = GPUArray(host_idx, copy=True) # TODO: this copy might be unneccessary
         device_new.to_device()  # Send data back to device
 
         return device_new
-
 
 
 def to_gpu(cpu_data):
@@ -185,3 +177,59 @@ def to_gpu(cpu_data):
     # gpu_array.allocate()
     gpu_array.to_device()
     return gpu_array
+
+
+class HostAllocator:
+    def __init__(self, shape, dtype):
+        if isinstance(dtype, type):
+            dtype = dtype.__name__
+
+        if dtype not in SUPPORTED_DTYPES:
+            raise UnsupportedDataType(
+                f"Data type: {dtype} is not supported!"
+            )
+
+        constructor = getattr(
+            backend, "HostAllocator_" + self._dtypestr
+        )
+ 
+        self._shape = list(shape)
+        self._dtype = dtype
+        self._size  = prod(shape)
+        self._alloc = constructor()
+        self._alloc.allocate(self._size)
+
+
+    def get(self):
+        return np.array(self._alloc, copy=False)
+
+    def ptr(self):
+        return self._alloc.ptr()
+
+
+class PagelockedAllocator:
+    def __init__(self, shape, dtype):
+        if isinstance(dtype, type):
+            dtype = dtype.__name__
+
+        if dtype not in SUPPORTED_DTYPES:
+            raise UnsupportedDataType(
+                f"Data type: {dtype} is not supported!"
+            )
+
+        constructor = getattr(
+            backend, "PagelockedAllocator_" + self._dtypestr
+        )
+ 
+        self._shape = list(shape)
+        self._dtype = dtype
+        self._size  = prod(shape)
+        self._alloc = constructor()
+        self._alloc.allocate(self._size)
+
+
+    def get(self):
+        return np.array(self._alloc, copy=False)
+
+    def ptr(self):
+        return self._alloc.ptr()
