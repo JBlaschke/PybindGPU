@@ -15,16 +15,20 @@ class UnsupportedDataType(Exception):
 
 class GPUArray(object):
     def __init__(self, *args, **kwargs):
-        if "shape" in kwargs:
-            a = kwargs["shape"]
-        else:
-            a = args[0]
-
         if "allocator" in kwargs:
             self._allocator = kwargs["allocator"]
             self._has_allocator = True
+            a = self._allocator._shape
+            if ("shape" in kwargs) or ("dtype" in kwargs) or (len(args) > 0):
+                raise RuntimeError(
+                    "When specifying the allocator kwarg, it must be the only input argument."
+                )
         else:
             self._has_allocator = False
+            if "shape" in kwargs:
+                a = kwargs["shape"]
+            else:
+                a = args[0]
 
         if isinstance(a, np.ndarray):
             if kwargs.get("copy", False):
@@ -41,16 +45,16 @@ class GPUArray(object):
             array_constructor = getattr(
                 backend, "DeviceArray_" + self._dtypestr
             )
-            if self._has_allocator:
-                RuntimeError(
-                    "Allocator is a meaningless when also passing numpy.array."
-                )
-            else:
-                self._device_array = array_constructor(self._hold)
+            self._device_array = array_constructor(self._hold)
 
         elif isinstance(a, tuple) or isinstance(a, list):
             a = list(a)  # make sure that a is a list (and not a tuple)
-            dtype = kwargs.get("dtype", "float64")
+
+            if self._has_allocator:
+                dtype = self._allocator._dtype
+            else:
+                dtype = kwargs.get("dtype", "float64")
+
             if isinstance(dtype, type):
                 dtype = dtype.__name__
 

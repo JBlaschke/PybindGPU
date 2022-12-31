@@ -32,8 +32,8 @@ print("Testing Un-Pinned GPUArray constructor")
 print("==============")
 
 
-a1_alloc = HostAllocator(shape, "float64")
-a1 = GPUArray(shape, allocator=a1_alloc, dtype="float64")
+a1_alloc = HostAllocator(shape, numpy.float64)
+a1 = GPUArray(allocator=a1_alloc)
 
 a1_alias = a1.get()
 # Copy data into page-locked memory
@@ -56,8 +56,8 @@ print("Testing Pinned GPUArray constructor")
 print("==============")
 
 
-a1_alloc = PagelockedAllocator(shape, "float64")
-a1 = GPUArray(shape, allocator=a1_alloc, dtype="float64")
+a1_alloc = PagelockedAllocator(shape, numpy.float64)
+a1 = GPUArray(allocator=a1_alloc)
 
 a1_alias = a1.get()
 # Copy data into page-locked memory
