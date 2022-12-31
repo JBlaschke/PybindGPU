@@ -42,7 +42,9 @@ class GPUArray(object):
                 backend, "DeviceArray_" + self._dtypestr
             )
             if self._has_allocator:
-                pass
+                RuntimeError(
+                    "Allocator is a meaningless when also passing numpy.array."
+                )
             else:
                 self._device_array = array_constructor(self._hold)
 
@@ -62,7 +64,7 @@ class GPUArray(object):
                 backend, "DeviceArray_" + self._dtypestr
             )
             if self._has_allocator:
-                pass
+                self._device_array = array_constructor(self._allocator.ptr(), a)
             else:
                 self._device_array = array_constructor(a)
 
@@ -189,9 +191,7 @@ class HostAllocator:
                 f"Data type: {dtype} is not supported!"
             )
 
-        constructor = getattr(
-            backend, "HostAllocator_" + self._dtypestr
-        )
+        constructor = getattr(backend, "HostAllocator_" + dtype)
  
         self._shape = list(shape)
         self._dtype = dtype
@@ -217,9 +217,7 @@ class PagelockedAllocator:
                 f"Data type: {dtype} is not supported!"
             )
 
-        constructor = getattr(
-            backend, "PagelockedAllocator_" + self._dtypestr
-        )
+        constructor = getattr(backend, "PagelockedAllocator_" + dtype)
  
         self._shape = list(shape)
         self._dtype = dtype
