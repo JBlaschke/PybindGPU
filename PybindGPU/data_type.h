@@ -31,8 +31,23 @@
         auto _ret = std::set<std::string>{};                                   \
         for (auto itr : std::set<std::string>{__VA_ARGS__}) {                  \
             if (!itr.empty()) {                                                \
-            _ret.insert(itr);                                                  \
+                _ret.insert(itr);                                              \
             }                                                                  \
+        }                                                                      \
+        return _ret;                                                           \
+    }();                                                                       \
+    return _value
+
+
+#define GET_ALIAS_LIST(...)                                                    \
+    static auto _value = []() {                                                \
+        auto _ret = std::vector<std::string>{};                                \
+        size_t count = 0;                                                      \
+        for (auto itr : std::vector<std::string>{__VA_ARGS__}) {               \
+            if (!itr.empty() && count > 0) {                                   \
+                _ret.push_back(itr);                                           \
+            }                                                                  \
+            count ++;                                                          \
         }                                                                      \
         return _ret;                                                           \
     }();                                                                       \
@@ -45,6 +60,7 @@
         using type = TYPE;                                                     \
         static std::string label() { GET_FIRST_STRING(__VA_ARGS__); }          \
         static const auto & labels() { GET_STRING_SET(__VA_ARGS__); }          \
+        static const auto & aliases() { GET_ALIAS_LIST(__VA_ARGS__); }         \
     };
 
 
@@ -81,11 +97,14 @@ void generate_enumeration(
         auto _generate = [& _enum](const auto & _labels, Tp _idx) {
             for (const auto & itr : _labels) {
                 assert(!itr.empty());
-                _enum.value(itr.c_str(), _idx);
+                _enum.value((itr + "_alias").c_str(), _idx);
             }
         };
 
-        FOLD_EXPRESSION(_generate(SpecT<Idx>::labels(), static_cast<Tp>(Idx)));
+        FOLD_EXPRESSION(
+            _enum.value(SpecT<Idx>::label().c_str(), static_cast<Tp>(Idx))
+        );
+        FOLD_EXPRESSION(_generate(SpecT<Idx>::aliases(), static_cast<Tp>(Idx)));
         _enum.value("__size__", DataTypesEnd);
 }
 
