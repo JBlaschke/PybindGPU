@@ -295,7 +295,7 @@ if __name__ == "__main__":
 
     setup(
         name="PybindGPU",
-        version="0.2.1",
+        version="0.2.2",
         author="Johannes Blaschke",
         author_email="johannes@blaschke.science",
         description="",
@@ -311,7 +311,7 @@ if __name__ == "__main__":
         ],
         python_requires='>=3.6',
         install_requires=[
-          'pybind11'
+          'pybind11', 'numpy'
         ],
         # inject our custom trigger
         cmdclass={'build_ext': custom_build_ext},
