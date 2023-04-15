@@ -2,6 +2,7 @@
 #define HOST_WRAPPER_H
 
 // #include <iostream>
+#include <cuda_hip_wrapper.h>
 
 
 template<class T, class E>

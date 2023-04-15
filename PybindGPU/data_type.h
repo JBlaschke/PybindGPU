@@ -3,7 +3,6 @@
 
 #include <set>
 #include <ptr_wrapper.h>
-#include <device_wrapper.h>
 #include <host_wrapper.h>
 #include <cuda_hip_wrapper.h>
 #include <pybind11/pybind11.h>
@@ -13,6 +12,7 @@
 
 #include <error.h>
 #include <event.h>
+#include <device_array.h>
 
 
 // TODO: these are from the PyKokkos source code -- and they need to be

@@ -1,13 +1,13 @@
 #include <data_type.h>
 #include <ptr_wrapper.h>
-#include <device_wrapper.h>
-#include <device_properties.h>
 #include <cuda_hip_wrapper.h>
 #include <pybind11/pybind11.h>
 
 #include <error.h>
 #include <event.h>
 #include <stream.h>
+#include <device_array.h>
+#include <device_properties.h>
 
 
 namespace py = pybind11;

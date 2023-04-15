@@ -1,5 +1,5 @@
-#ifndef DEVICE_WRAPPER_H
-#define DEVICE_WRAPPER_H
+#ifndef DEVICE_ARRAY_H
+#define DEVICE_ARRAY_H
 
 // #include <iostream>
 #include <vector>
@@ -7,7 +7,6 @@
 #include <ptr_wrapper.h>
 #include <cuda_hip_wrapper.h>
 #include <pybind11/pybind11.h>
-#include <device_wrapper.h>
 
 #include <error.h>
 #include <event.h>
