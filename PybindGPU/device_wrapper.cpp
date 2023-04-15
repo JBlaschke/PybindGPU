@@ -1,22 +1,6 @@
 #include <device_wrapper.h>
 
 
-
-CudaEvent::CudaEvent() {
-    status = cudaEventCreate(& event);
-}
-
-
-CudaEvent::CudaEvent(unsigned int flags) {
-    status = cudaEventCreateWithFlags(& event, flags);
-}
-
-
-CudaEvent::~CudaEvent() {
-    status = cudaEventDestroy(event);
-}
-
-
 CudaStream::CudaStream() {
     status = cudaStreamCreate(& stream);
 }

@@ -9,31 +9,11 @@
 #include <pybind11/pybind11.h>
 #include <device_wrapper.h>
 
+#include <error.h>
+#include <event.h>
+
 
 namespace py = pybind11;
-
-struct CudaError : public obj_wrapper<cudaError_t> {
-
-    CudaError(int a_error) : obj_wrapper(static_cast<cudaError_t>(a_error)) {};
-
-    int as_int() const;
-};
-
-
-class CudaEvent {
-    public:
-        CudaEvent();
-        CudaEvent(unsigned int flags);
-        ~CudaEvent();
-
-        cudaEvent_t & operator* () { return event; }
-        cudaEvent_t * get() { return & event; }
-        cudaError_t last_status() const { return status; }
-    private:
-        cudaEvent_t event;
-        cudaError_t status;
-};
-
 
 class CudaStream {
     public:

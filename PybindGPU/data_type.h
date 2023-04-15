@@ -11,6 +11,9 @@
 #include <complex>
 #include <pybind11/complex.h>
 
+#include <error.h>
+#include <event.h>
+
 
 // TODO: these are from the PyKokkos source code -- and they need to be
 // documented

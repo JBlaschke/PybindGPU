@@ -18,11 +18,6 @@ DATA_TYPE(std::complex<float>, Complex64, "complex64", "complex64")
 DATA_TYPE(std::complex<double>, Complex128, "complex128", "complex128")
 
 
-int CudaError::as_int() const {
-    return static_cast<int>(_obj);
-}
-
-
 void generate_enumeration(py::module & _mod) {
     py::enum_<DataType> _dtype(_mod, "dtype", "Raw data types");
     _dtype.export_values();

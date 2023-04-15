@@ -5,6 +5,9 @@
 #include <cuda_hip_wrapper.h>
 #include <pybind11/pybind11.h>
 
+#include <error.h>
+#include <event.h>
+
 
 namespace py = pybind11;
 
@@ -17,31 +20,9 @@ PYBIND11_MODULE(backend, m) {
     // Build all datatype wrapper bindings
     generate_datatype(m);
 
-    py::class_<CudaError>(m, "cudaError_t")
-        .def(py::init<int>())
-        .def("as_int", & CudaError::as_int)
-        .def("__repr__",
-            [](const CudaError & a) {
-                return "<CudaError: 'code=" + std::to_string(a.as_int()) + "'>";
-            }
-        );
+    generate_cuda_error(m);
 
-    // This needs to be defined so that the ptr_wrapper has something to return
-    py::class_<ptr_wrapper<cudaEvent_t>>(m, "_CUevent_st__ptr");
-
-    py::class_<CudaEvent>(m, "cudaEvent_t")
-        .def(py::init<>())
-        .def(py::init<int>())
-        .def("get",
-            [](CudaEvent & a) {
-                return ptr_wrapper<cudaEvent_t>(a.get());
-            }
-        )
-        .def("last_status",
-            [](const CudaEvent & a) {
-                return CudaError(a.last_status());
-            }
-        );
+    generate_cuda_event(m);
 
     py::class_<CudaStream>(m, "cudaStream_t")
         .def(py::init<>())
