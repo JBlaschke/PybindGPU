@@ -7,36 +7,20 @@
 
 #include <error.h>
 #include <event.h>
+#include <stream.h>
 
 
 namespace py = pybind11;
-
 
 PYBIND11_MODULE(backend, m) {
 
     // Build all enumerations used internally by cuda bindings
     generate_enumeration(m);
-
     // Build all datatype wrapper bindings
     generate_datatype(m);
-
     generate_cuda_error(m);
-
     generate_cuda_event(m);
-
-    py::class_<CudaStream>(m, "cudaStream_t")
-        .def(py::init<>())
-        .def(py::init<int>())
-        .def("get",
-            [](CudaStream & a) {
-                return ptr_wrapper<cudaStream_t>(a.get());
-            }
-        )
-        .def("last_status",
-            [](const CudaStream & a) {
-                return CudaError(a.last_status());
-            }
-        );
+    generate_cuda_stream(m);
 
     m.def(
         "cudaDeviceReset",
