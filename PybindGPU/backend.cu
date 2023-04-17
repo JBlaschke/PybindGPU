@@ -18,6 +18,9 @@ PYBIND11_MODULE(backend, m) {
     generate_enumeration(m);
     // Build all datatype wrapper bindings
     generate_datatype(m);
+
+    generate_device_array(m);
+
     generate_cuda_error(m);
     generate_cuda_event(m);
     generate_cuda_stream(m);

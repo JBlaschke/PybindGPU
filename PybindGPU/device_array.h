@@ -10,6 +10,7 @@
 
 #include <error.h>
 #include <event.h>
+#include <data_type.h>
 
 
 namespace py = pybind11;
@@ -176,5 +177,90 @@ class DeviceArray {
 
         cudaError_t status;
 };
+
+
+template <template <size_t> class SpecT, size_t ... DataIdx>
+void generate_device_array(py::module & _mod, std::index_sequence<DataIdx ...>) {
+    FOLD_EXPRESSION(
+        py::class_<DeviceArray<typename SpecT<DataIdx>::type>>(
+            _mod, ("DeviceArray_" + SpecT<DataIdx>::label()).c_str(),
+            py::buffer_protocol()
+        )
+        .def(py::init<size_t>())
+        .def(py::init(
+            [](py::list l) {
+                using dtype = typename SpecT<DataIdx>::type;
+                std::vector<ssize_t> shape(py::len(l));
+                for (size_t i = 0; i < shape.size(); i++) {
+                    shape[i] = l[i].cast<ssize_t>();
+                }
+                return DeviceArray<dtype>(shape);
+            }
+        ), py::return_value_policy::reference)
+        .def(py::init(
+            [](ptr_wrapper<typename SpecT<DataIdx>::type> & a, py::list l) {
+                using dtype = typename SpecT<DataIdx>::type;
+                std::vector<ssize_t> shape(py::len(l));
+                for (size_t i = 0; i < shape.size(); i++) {
+                    shape[i] = l[i].cast<ssize_t>();
+                }
+                return DeviceArray<dtype>(a.get(), shape);
+            }
+        ), py::return_value_policy::reference)
+        .def(py::init(
+            [](py::buffer b) {
+                py::buffer_info info = b.request();
+                using dtype = typename SpecT<DataIdx>::type;
+                return DeviceArray<dtype>(
+                    static_cast<dtype *>(info.ptr), info.shape
+                );
+            }
+        ), py::return_value_policy::reference)
+        .def_buffer(
+            [](DeviceArray<typename SpecT<DataIdx>::type> & m) {
+                return m.buffer_info();
+        })
+        .def("size",
+            & DeviceArray<typename SpecT<DataIdx>::type>::size
+        )
+        .def("shape",
+            & DeviceArray<typename SpecT<DataIdx>::type>::shape
+        )
+        .def("strides",
+            & DeviceArray<typename SpecT<DataIdx>::type>::strides
+        )
+        .def("last_status",
+            [](const DeviceArray<typename SpecT<DataIdx>::type> & a) {
+                return CudaError(a.last_status());
+            }
+        )
+        .def("allocate",
+            & DeviceArray<typename SpecT<DataIdx>::type>::allocate
+        )
+        .def("to_host",
+            & DeviceArray<typename SpecT<DataIdx>::type>::to_host
+        )
+        .def("to_device",
+            & DeviceArray<typename SpecT<DataIdx>::type>::to_device
+        )
+        .def("host_data", 
+            [](DeviceArray<typename SpecT<DataIdx>::type> & a) {
+                using dtype = typename SpecT<DataIdx>::type;
+                return ptr_wrapper<dtype>(a.host_data(), true);
+            }
+        )
+        .def("device_data",
+            [](DeviceArray<typename SpecT<DataIdx>::type> & a) {
+                using dtype = typename SpecT<DataIdx>::type;
+                return ptr_wrapper<dtype>(a.device_data(), false);
+            }
+        )
+        .def("allocated",
+            & DeviceArray<typename SpecT<DataIdx>::type>::allocated
+        )
+    );
+}
+
+void generate_device_array(py::module & _mod);
 
 #endif
