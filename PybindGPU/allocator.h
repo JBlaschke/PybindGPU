@@ -1,5 +1,5 @@
-#ifndef HOST_WRAPPER_H
-#define HOST_WRAPPER_H
+#ifndef ALLOCATOR_H
+#define ALLOCATOR_H
 
 // #include <iostream>
 #include <cuda_hip_wrapper.h>

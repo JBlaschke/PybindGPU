@@ -3,7 +3,6 @@
 
 #include <set>
 #include <ptr_wrapper.h>
-#include <host_wrapper.h>
 #include <cuda_hip_wrapper.h>
 #include <pybind11/pybind11.h>
 
@@ -12,6 +11,7 @@
 
 #include <error.h>
 #include <event.h>
+#include <allocator.h>
 #include <device_array.h>
 
 
