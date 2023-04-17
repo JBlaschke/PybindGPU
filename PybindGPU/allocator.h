@@ -2,7 +2,14 @@
 #define ALLOCATOR_H
 
 // #include <iostream>
+#include <ptr_wrapper.h>
 #include <cuda_hip_wrapper.h>
+#include <pybind11/pybind11.h>
+
+#include <data_type.h>
+
+
+namespace py = pybind11;
 
 
 template<class T, class E>
@@ -125,5 +132,61 @@ class PagelockedAllocator : public Allocator<T, cudaError_t> {
         using  Allocator<T, cudaError_t>::_owner;
 };
 
+
+template <template <size_t> class SpecT, size_t ... DataIdx>
+void generate_allocator(py::module & _mod, std::index_sequence<DataIdx ...>) {
+    FOLD_EXPRESSION(
+        py::class_<HostAllocator<typename SpecT<DataIdx>::type>>(
+            _mod, ("HostAllocator_" + SpecT<DataIdx>::label()).c_str()
+        )
+        .def(py::init<>())
+        .def("allocate",
+            & HostAllocator<typename SpecT<DataIdx>::type>::allocate
+        )
+        .def("ptr",
+            [](HostAllocator<typename SpecT<DataIdx>::type> & a) {
+                using dtype = typename SpecT<DataIdx>::type;
+                return ptr_wrapper<dtype>(a.ptr(), true);
+            }
+        )
+    );
+    FOLD_EXPRESSION(
+        py::class_<DeviceAllocator<typename SpecT<DataIdx>::type>>(
+            _mod, ("DeviceAllocator_" + SpecT<DataIdx>::label()).c_str()
+        )
+        .def(py::init<>())
+        .def("allocate",
+            [](DeviceAllocator<typename SpecT<DataIdx>::type> & a, size_t n) {
+                return CudaError(a.allocate(n));
+            }
+        )
+        .def("ptr",
+            [](DeviceAllocator<typename SpecT<DataIdx>::type> & a) {
+                using dtype = typename SpecT<DataIdx>::type;
+                return ptr_wrapper<dtype>(a.ptr(), true);
+            }
+        )
+    );
+    FOLD_EXPRESSION(
+        py::class_<PagelockedAllocator<typename SpecT<DataIdx>::type>>(
+            _mod, ("PagelockedAllocator_" + SpecT<DataIdx>::label()).c_str()
+        )
+        .def(py::init<>())
+        .def("allocate",
+            [](PagelockedAllocator<typename SpecT<DataIdx>::type> & a, size_t n) {
+                return CudaError(a.allocate(n));
+            }
+        )
+        .def("ptr",
+            [](PagelockedAllocator<typename SpecT<DataIdx>::type> & a) {
+                using dtype = typename SpecT<DataIdx>::type;
+                return ptr_wrapper<dtype>(a.ptr(), true);
+            }
+        )
+    );
+}
+
+
+void generate_allocator(py::module & _mod);
 
 #endif

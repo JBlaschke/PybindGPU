@@ -6,6 +6,7 @@
 #include <error.h>
 #include <event.h>
 #include <stream.h>
+#include <allocator.h>
 #include <device_array.h>
 #include <device_properties.h>
 
@@ -19,11 +20,12 @@ PYBIND11_MODULE(backend, m) {
     // Build all datatype wrapper bindings
     generate_datatype(m);
 
-    generate_device_array(m);
-
     generate_cuda_error(m);
     generate_cuda_event(m);
     generate_cuda_stream(m);
+
+    generate_allocator(m);
+    generate_device_array(m);
 
     m.def(
         "cudaDeviceReset",

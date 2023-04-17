@@ -15,6 +15,7 @@
 
 namespace py = pybind11;
 
+
 template<class T>
 class DeviceArray {
     public:
@@ -260,6 +261,7 @@ void generate_device_array(py::module & _mod, std::index_sequence<DataIdx ...>) 
         )
     );
 }
+
 
 void generate_device_array(py::module & _mod);
 

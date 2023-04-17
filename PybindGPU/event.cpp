@@ -1,5 +1,6 @@
 #include <event.h>
 
+
 CudaEvent::CudaEvent() {
     status = cudaEventCreate(& event);
 }
