@@ -7,6 +7,7 @@
 #include <ptr_wrapper.h>
 #include <cuda_hip_wrapper.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include <error.h>
 #include <event.h>
@@ -107,6 +108,29 @@ class DeviceArray {
             host_allocated = false;
             device_allocated = false;
         };
+        
+        DeviceArray(size_t host_addr, size_t device_addr, std::vector<ssize_t> & shape)
+        : m_shape{shape}, device_allocated(false) {
+            // total size
+            m_size = std::accumulate(
+                shape.begin(), shape.end(), 1,
+                std::multiplies<ssize_t>()
+            );
+            // define array strides, assuming c-order
+            m_ndim = shape.size();
+            m_strides = std::vector<ssize_t>(m_ndim);
+            ssize_t stride = sizeof(T);
+            for (int i = m_ndim - 1; i >= 0; i--) {
+                m_strides[i] = stride;
+                stride = stride * shape[i];
+            }
+            // Just point to the given addresses
+            host_ptr = reinterpret_cast<T *>(host_addr);
+            device_ptr = reinterpret_cast<T *>(device_addr);
+            // allocation status
+            host_allocated = true;
+            device_allocated = true;
+        };
 
         ~DeviceArray() {
             if (host_allocated)
@@ -137,6 +161,10 @@ class DeviceArray {
             status = cudaMemcpy(
                 host_ptr, device_ptr, m_size*sizeof(T), cudaMemcpyDeviceToHost
             );
+        }
+
+        void set(ssize_t idx, T val) {
+            device_ptr[idx] = val;
         }
 
         T * host_data() { return host_ptr; }
@@ -209,6 +237,16 @@ void generate_device_array(py::module & _mod, std::index_sequence<DataIdx ...>) 
             }
         ), py::return_value_policy::reference)
         .def(py::init(
+            [](size_t host_addr, size_t device_addr, py::list l) {
+                using dtype = typename SpecT<DataIdx>::type;
+                std::vector<ssize_t> shape(py::len(l));
+                for (size_t i = 0; i < shape.size(); i++) {
+                    shape[i] = l[i].cast<ssize_t>();
+                }
+                return DeviceArray<dtype>(host_addr, device_addr, shape);
+            }
+        ), py::return_value_policy::reference)
+        .def(py::init(
             [](py::buffer b) {
                 py::buffer_info info = b.request();
                 using dtype = typename SpecT<DataIdx>::type;
@@ -223,9 +261,6 @@ void generate_device_array(py::module & _mod, std::index_sequence<DataIdx ...>) 
         })
         .def("size",
             & DeviceArray<typename SpecT<DataIdx>::type>::size
-        )
-        .def("shape",
-            & DeviceArray<typename SpecT<DataIdx>::type>::shape
         )
         .def("strides",
             & DeviceArray<typename SpecT<DataIdx>::type>::strides
@@ -258,6 +293,21 @@ void generate_device_array(py::module & _mod, std::index_sequence<DataIdx ...>) 
         )
         .def("allocated",
             & DeviceArray<typename SpecT<DataIdx>::type>::allocated
+        )
+        .def("set",
+            [](DeviceArray<typename SpecT<DataIdx>::type> & a, ssize_t idx, typename SpecT<DataIdx>::type val) {
+                if (idx >= 0 && idx < a.size()) {
+                    a.set(idx, val);
+                }else{
+                    printf("Idx must be between 0 and %ld (Idx: %ld)\n", a.size(), idx);
+                }
+            }
+        )
+        .def("shape",
+            [](DeviceArray<typename SpecT<DataIdx>::type> & a) {
+                py::object shape = py::cast(a.shape());
+                return shape;
+            }
         )
     );
 }
