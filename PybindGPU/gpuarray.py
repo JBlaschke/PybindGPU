@@ -91,10 +91,7 @@ class GPUArray(object):
                 backend, "DeviceArray_" + self._dtypestr
             )
             if self._has_allocator:
-                if hasattr(self._allocator, '_host_ptr'):
-                    self._device_array = array_constructor(self._allocator.host_ptr(), self._allocator.ptr(), a)
-                else:
-                    self._device_array = array_constructor(self._allocator.ptr(), a)
+                self._device_array = array_constructor(self._allocator.host_ptr(), self._allocator.ptr(), a)
             else:
                 self._device_array = array_constructor(a)
 
@@ -103,7 +100,8 @@ class GPUArray(object):
                 "input must either a numpy array -- or a list, or a tuple"
             )
 
-        self._device_array.allocate()
+        if not self._has_allocator:
+            self._device_array.allocate()
 
 
     @property

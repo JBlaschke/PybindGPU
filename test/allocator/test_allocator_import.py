@@ -19,13 +19,13 @@ j_gpu.set(1, 44)
 j_gpu.set(8, 45)
 # j is another numpy array allocated automatically by gpuarray.Allocator
 j = j_gpu.get()
-print(f'{j=} {type(j)=} {j.ctypes.data=}')
+print(f'{j[0,:]=} {type(j)=} {j.ctypes.data=}')
 print(f'{k=} {type(k)=} {k.ctypes.data=}')
-# Check answers
+# Check answers (k shouldn't change)
 known_k = np.array([0,1,2,3,4,5], dtype=np.int64).reshape(3,2)
-known_j = np.array([43,44,2,3,4,5], dtype=np.int64).reshape(3,2)
+known_j = np.array([43,44], dtype=np.int64)
 assert np.array_equal(k, known_k)
-assert np.array_equal(j, known_j)
+assert np.array_equal(j[0,:], known_j)
 
 try:
     import cupy

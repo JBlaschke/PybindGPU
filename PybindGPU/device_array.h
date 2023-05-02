@@ -128,8 +128,8 @@ class DeviceArray {
             host_ptr = reinterpret_cast<T *>(host_addr);
             device_ptr = reinterpret_cast<T *>(device_addr);
             // allocation status
-            host_allocated = true;
-            device_allocated = true;
+            host_allocated = false;
+            device_allocated = false;
         };
 
         ~DeviceArray() {
@@ -148,7 +148,10 @@ class DeviceArray {
         }
 
         void to_device() {
-            if (!device_allocated) return;
+            // FIXME: Below line is commented out until future fix.
+            // CAUSE: With allocator, divice memory is not owned by this class
+            // but we still need to be able to copy to and from this memory.   
+            //if (!device_allocated) return;
 
             status = cudaMemcpy(
                 device_ptr, host_ptr, m_size*sizeof(T), cudaMemcpyHostToDevice
@@ -156,7 +159,8 @@ class DeviceArray {
         }
 
         void to_host() {
-            if (!device_allocated) return;
+            // FIXME: see to_device() 
+            //if (!device_allocated) return;
 
             status = cudaMemcpy(
                 host_ptr, device_ptr, m_size*sizeof(T), cudaMemcpyDeviceToHost
