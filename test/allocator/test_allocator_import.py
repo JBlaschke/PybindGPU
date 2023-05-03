@@ -14,9 +14,9 @@ print(f'{k_gpu=} {type(k_gpu)=} {k_gpu.ptr=} {k_gpu.shape=}')
 # Create another gpuarray pointing to the first gpuarray
 j_gpu = gpuarray.GPUArray(allocator=gpuarray.Allocator(k_gpu))
 # Set j_gpu to something else
-j_gpu.set(0, 43)
-j_gpu.set(1, 44)
-j_gpu.set(8, 45)
+j_gpu.set_val(0, 43)
+j_gpu.set_val(1, 44)
+j_gpu.set_val(8, 45)
 # j is another numpy array allocated automatically by gpuarray.Allocator
 j = j_gpu.get()
 print(f'{j[0,:]=} {type(j)=} {j.ctypes.data=}')
@@ -41,8 +41,8 @@ if cupy_available:
     k_gpu=gpuarray.GPUArray(allocator=gpuarray.Allocator(k))
     print(f'{k=} {type(k)=} {k.data.ptr=}')
     print(f'{k_gpu=} {type(k_gpu)=} {k_gpu.ptr=} {k_gpu.shape=}')
-    k_gpu.set(0, 43)
-    k_gpu.set(1, 44)
+    k_gpu.set_val(0, 43)
+    k_gpu.set_val(1, 44)
     j = k_gpu.get()
     print(f'{j=} {type(j)=} {j.ctypes.data=}')
     print(f'{k=} {type(k)=} {k.data.ptr=}')

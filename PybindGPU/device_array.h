@@ -166,14 +166,29 @@ class DeviceArray {
                 host_ptr, device_ptr, m_size*sizeof(T), cudaMemcpyDeviceToHost
             );
         }
+        
+        void set(size_t external_host_addr) {
+            // Provides compatibilty with PyCUDA .set(). 
+            // The input argument is the address of an external array.
 
-        void set(ssize_t idx, T val) {
+            // FIXME: see to_device() 
+            //if (!device_allocated) return;
+            
+            T* external_host_ptr = reinterpret_cast<T *>(external_host_addr);
+
+            status = cudaMemcpy(
+                device_ptr, external_host_ptr, m_size*sizeof(T), cudaMemcpyHostToDevice
+            );
+        }
+
+        void set_val(ssize_t idx, T val) {
             device_ptr[idx] = val;
         }
 
         T * host_data() { return host_ptr; }
         T * device_data() { return device_ptr; }
         ssize_t size() const { return m_size; }
+        ssize_t nbytes() const { return m_size * sizeof(T); }
         const std::vector<ssize_t> & shape() const { return m_shape; };
         const std::vector<ssize_t> & strides() const { return m_strides; };
         cudaError_t last_status() const { return status; }
@@ -266,6 +281,9 @@ void generate_device_array(py::module & _mod, std::index_sequence<DataIdx ...>) 
         .def("size",
             & DeviceArray<typename SpecT<DataIdx>::type>::size
         )
+        .def("nbytes",
+            & DeviceArray<typename SpecT<DataIdx>::type>::nbytes
+        )
         .def("strides",
             & DeviceArray<typename SpecT<DataIdx>::type>::strides
         )
@@ -298,14 +316,17 @@ void generate_device_array(py::module & _mod, std::index_sequence<DataIdx ...>) 
         .def("allocated",
             & DeviceArray<typename SpecT<DataIdx>::type>::allocated
         )
-        .def("set",
+        .def("set_val",
             [](DeviceArray<typename SpecT<DataIdx>::type> & a, ssize_t idx, typename SpecT<DataIdx>::type val) {
                 if (idx >= 0 && idx < a.size()) {
-                    a.set(idx, val);
+                    a.set_val(idx, val);
                 }else{
                     printf("Idx must be between 0 and %ld (Idx: %ld)\n", a.size(), idx);
                 }
             }
+        )
+        .def("set",
+            & DeviceArray<typename SpecT<DataIdx>::type>::set
         )
         .def("shape",
             [](DeviceArray<typename SpecT<DataIdx>::type> & a) {
