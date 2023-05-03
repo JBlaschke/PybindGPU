@@ -12,6 +12,29 @@ class UnsupportedDataType(Exception):
     def __init__(self, message):
         super().__init__(message)
 
+class Allocator:
+    def __init__(self, data, host_data=None):
+        if isinstance(data, GPUArray):
+            self.data = data
+            self._shape = data.shape
+            self._dtype = data.dtype.name
+        else:
+            # cupy array
+            self.data = data.data
+            self._shape = data.shape
+            self._dtype = data.dtype.name
+        if host_data is not None:
+            self.host_data = host_data
+        else:
+            # Creates a numpy array corresponds to this gpuarray (for host_ptr)
+            self.host_data = np.empty(self._shape, dtype=data.dtype)
+        self._host_ptr = self.host_data.ctypes.data
+
+    def ptr(self):
+        return self.data.ptr
+    def host_ptr(self):
+        return self._host_ptr
+
 
 class GPUArray(object):
     def __init__(self, *args, **kwargs):
@@ -68,7 +91,7 @@ class GPUArray(object):
                 backend, "DeviceArray_" + self._dtypestr
             )
             if self._has_allocator:
-                self._device_array = array_constructor(self._allocator.ptr(), a)
+                self._device_array = array_constructor(self._allocator.host_ptr(), self._allocator.ptr(), a)
             else:
                 self._device_array = array_constructor(a)
 
@@ -77,7 +100,8 @@ class GPUArray(object):
                 "input must either a numpy array -- or a list, or a tuple"
             )
 
-        self._device_array.allocate()
+        if not self._has_allocator:
+            self._device_array.allocate()
 
 
     @property
@@ -160,6 +184,9 @@ class GPUArray(object):
 
     def to_device(self):
         self._device_array.to_device()
+
+    def set(self, idx, val):
+        self._device_array.set(idx, val)
 
 
     def __getitem__(self, index):
