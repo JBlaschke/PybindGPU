@@ -18,6 +18,10 @@ class Allocator:
             self.data = data
             self._shape = data.shape
             self._dtype = data.dtype.name
+        elif isinstance(data, PagelockedAllocator):
+            self.data = data
+            self._shape = data._shape
+            self._dtype = data._dtype
         else:
             # cupy array
             self.data = data.data
@@ -27,10 +31,12 @@ class Allocator:
             self.host_data = host_data
         else:
             # Creates a numpy array corresponds to this gpuarray (for host_ptr)
-            self.host_data = np.empty(self._shape, dtype=data.dtype)
+            self.host_data = np.empty(self._shape, dtype=getattr(np, self._dtype))
         self._host_ptr = self.host_data.ctypes.data
 
     def ptr(self):
+        if isinstance(self.data, PagelockedAllocator):
+            return self.data.ptr()
         return self.data.ptr
     def host_ptr(self):
         return self._host_ptr
@@ -110,6 +116,11 @@ class GPUArray(object):
 
 
     @property
+    def nbytes(self):
+        return self._device_array.nbytes()
+
+
+    @property
     def shape(self):
         return self._device_array.shape()
 
@@ -146,6 +157,13 @@ class GPUArray(object):
         self._device_array.to_host()
         a = np.array(self._device_array, copy=copy)
         return a
+
+    
+    def set(self, cpudata):
+        """
+        PyCUDA compatibility: .set() transfers data to host
+        """
+        self.to_device()
 
 
     def __cuda_array_interface__(self):
@@ -185,8 +203,14 @@ class GPUArray(object):
     def to_device(self):
         self._device_array.to_device()
 
-    def set(self, idx, val):
-        self._device_array.set(idx, val)
+    
+    def set_val(self, idx, val):
+        self._device_array.set_val(idx, val)
+
+
+    def set(self, host_data):
+        # TODO: check if size of the host_data is the same as device_data
+        self._device_array.set(host_data.ctypes.data)
 
 
     def __getitem__(self, index):
