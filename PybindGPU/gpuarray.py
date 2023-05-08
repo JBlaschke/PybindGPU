@@ -122,7 +122,9 @@ class GPUArray(object):
 
     @property
     def shape(self):
-        return self._device_array.shape()
+        # Pybind11 casts std::vector to a list. We convert
+        # this to uple for compatibility with other libs. 
+        return tuple(self._device_array.shape())
 
 
     @property
@@ -159,13 +161,6 @@ class GPUArray(object):
         return a
 
     
-    def set(self, cpudata):
-        """
-        PyCUDA compatibility: .set() transfers data to host
-        """
-        self.to_device()
-
-
     def __cuda_array_interface__(self):
         """
         Returns a CUDA Array Interface dictionary describing this array's data.
@@ -209,7 +204,12 @@ class GPUArray(object):
 
 
     def set(self, host_data):
-        # TODO: check if size of the host_data is the same as device_data
+        """
+        PyCUDA compatibility: .set() transfers external numpy array data to gpu
+        """
+        assert isinstance(host_data, np.ndarray)
+        assert np.array_equal(host_data.shape, self.shape)
+        assert host_data.dtype == self.dtype
         self._device_array.set(host_data.ctypes.data)
 
 
