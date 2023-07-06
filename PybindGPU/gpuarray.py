@@ -44,6 +44,11 @@ class Allocator:
 
 class GPUArray(object):
     def __init__(self, *args, **kwargs):
+        self.flag_c_contiguous = 1
+        if "order" in kwargs:
+            if kwargs["order"] == "F":
+                self.flag_c_contiguous = 0
+
         if "allocator" in kwargs:
             self._allocator = kwargs["allocator"]
             self._has_allocator = True
@@ -74,6 +79,7 @@ class GPUArray(object):
             array_constructor = getattr(
                 backend, "DeviceArray_" + self._dtypestr
             )
+            
             self._device_array = array_constructor(self._hold)
 
         elif isinstance(a, tuple) or isinstance(a, list):
@@ -97,9 +103,9 @@ class GPUArray(object):
                 backend, "DeviceArray_" + self._dtypestr
             )
             if self._has_allocator:
-                self._device_array = array_constructor(self._allocator.host_ptr(), self._allocator.ptr(), a)
+                self._device_array = array_constructor(self._allocator.host_ptr(), self._allocator.ptr(), a, self.flag_c_contiguous)
             else:
-                self._device_array = array_constructor(a)
+                self._device_array = array_constructor(a, self.flag_c_contiguous)
 
         else:
             raise UnsupportedDataType(
