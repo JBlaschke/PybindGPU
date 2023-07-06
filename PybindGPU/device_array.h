@@ -14,6 +14,9 @@
 #include <data_type.h>
 
 
+#include <iostream>
+
+
 namespace py = pybind11;
 
 
@@ -65,21 +68,32 @@ class DeviceArray {
             device_allocated = false;
         };
 
-        DeviceArray(std::vector<ssize_t> & shape)
+        void set_strides(std::vector<ssize_t> & shape, int flag_c_contiguous){
+            // define array strides, eiter c- or F-order
+            m_ndim = shape.size();
+            m_strides = std::vector<ssize_t>(m_ndim);
+            ssize_t stride = sizeof(T);
+            if (flag_c_contiguous == 1) {
+                for (int i = m_ndim - 1; i >= 0; i--) {
+                    m_strides[i] = stride;
+                    stride = stride * shape[i];
+                }
+            } else {
+                for (int i = 0; i < m_ndim; i++) {
+                    m_strides[i] = stride;
+                    stride = stride * shape[i];
+                }
+            }
+        }
+
+        DeviceArray(std::vector<ssize_t> & shape, int flag_c_contiguous)
         : m_shape{shape}, device_allocated(false) {
             // total size
             m_size = std::accumulate(
                 shape.begin(), shape.end(), 1,
                 std::multiplies<ssize_t>()
             );
-            // define array strides, assuming c-order
-            m_ndim = shape.size();
-            m_strides = std::vector<ssize_t>(m_ndim);
-            ssize_t stride = sizeof(T);
-            for (int i = m_ndim - 1; i >= 0; i--) {
-                m_strides[i] = stride;
-                stride = stride * shape[i];
-            }
+            set_strides(shape, flag_c_contiguous);
             // allocate data
             host_ptr = new T[m_size];
             // allocation status
@@ -87,21 +101,14 @@ class DeviceArray {
             device_allocated = false;
         };
 
-        DeviceArray(T * data_ptr, std::vector<ssize_t> & shape)
+        DeviceArray(T * data_ptr, std::vector<ssize_t> & shape, int flag_c_contiguous)
         : m_shape{shape}, device_allocated(false) {
             // total size
             m_size = std::accumulate(
                 shape.begin(), shape.end(), 1,
                 std::multiplies<ssize_t>()
             );
-            // define array strides, assuming c-order
-            m_ndim = shape.size();
-            m_strides = std::vector<ssize_t>(m_ndim);
-            ssize_t stride = sizeof(T);
-            for (int i = m_ndim - 1; i >= 0; i--) {
-                m_strides[i] = stride;
-                stride = stride * shape[i];
-            }
+            set_strides(shape, flag_c_contiguous);
             // transfer data
             host_ptr = data_ptr;
             // allocation status
@@ -109,21 +116,30 @@ class DeviceArray {
             device_allocated = false;
         };
         
-        DeviceArray(size_t host_addr, size_t device_addr, std::vector<ssize_t> & shape)
+        DeviceArray(T * data_ptr, std::vector<ssize_t> & shape, std::vector<ssize_t> & strides)
         : m_shape{shape}, device_allocated(false) {
             // total size
             m_size = std::accumulate(
                 shape.begin(), shape.end(), 1,
                 std::multiplies<ssize_t>()
             );
-            // define array strides, assuming c-order
             m_ndim = shape.size();
-            m_strides = std::vector<ssize_t>(m_ndim);
-            ssize_t stride = sizeof(T);
-            for (int i = m_ndim - 1; i >= 0; i--) {
-                m_strides[i] = stride;
-                stride = stride * shape[i];
-            }
+            m_strides = strides;
+            // transfer data
+            host_ptr = data_ptr;
+            // allocation status
+            host_allocated = false;
+            device_allocated = false;
+        };
+        
+        DeviceArray(size_t host_addr, size_t device_addr, std::vector<ssize_t> & shape, int flag_c_contiguous)
+        : m_shape{shape}, device_allocated(false) {
+            // total size
+            m_size = std::accumulate(
+                shape.begin(), shape.end(), 1,
+                std::multiplies<ssize_t>()
+            );
+            set_strides(shape, flag_c_contiguous);
             // Just point to the given addresses
             host_ptr = reinterpret_cast<T *>(host_addr);
             device_ptr = reinterpret_cast<T *>(device_addr);
@@ -236,41 +252,41 @@ void generate_device_array(py::module & _mod, std::index_sequence<DataIdx ...>) 
         )
         .def(py::init<size_t>())
         .def(py::init(
-            [](py::list l) {
+            [](py::list l, int flag_c_contiguous) {
                 using dtype = typename SpecT<DataIdx>::type;
                 std::vector<ssize_t> shape(py::len(l));
                 for (size_t i = 0; i < shape.size(); i++) {
                     shape[i] = l[i].cast<ssize_t>();
                 }
-                return DeviceArray<dtype>(shape);
+                return DeviceArray<dtype>(shape, flag_c_contiguous);
             }
-        ), py::return_value_policy::reference)
+        ), py::arg("l"), py::arg("flag_c_contiguous")=1, py::return_value_policy::reference)
         .def(py::init(
-            [](ptr_wrapper<typename SpecT<DataIdx>::type> & a, py::list l) {
+            [](ptr_wrapper<typename SpecT<DataIdx>::type> & a, py::list l, int flag_c_contiguous) {
                 using dtype = typename SpecT<DataIdx>::type;
                 std::vector<ssize_t> shape(py::len(l));
                 for (size_t i = 0; i < shape.size(); i++) {
                     shape[i] = l[i].cast<ssize_t>();
                 }
-                return DeviceArray<dtype>(a.get(), shape);
+                return DeviceArray<dtype>(a.get(), shape, flag_c_contiguous);
             }
-        ), py::return_value_policy::reference)
+        ), py::arg("a"), py::arg("l"), py::arg("flag_c_contiguous")=1, py::return_value_policy::reference)
         .def(py::init(
-            [](size_t host_addr, size_t device_addr, py::list l) {
+            [](size_t host_addr, size_t device_addr, py::list l, int flag_c_contiguous) {
                 using dtype = typename SpecT<DataIdx>::type;
                 std::vector<ssize_t> shape(py::len(l));
                 for (size_t i = 0; i < shape.size(); i++) {
                     shape[i] = l[i].cast<ssize_t>();
                 }
-                return DeviceArray<dtype>(host_addr, device_addr, shape);
+                return DeviceArray<dtype>(host_addr, device_addr, shape, flag_c_contiguous);
             }
-        ), py::return_value_policy::reference)
+        ), py::arg("host_addr"), py::arg("device_addr"), py::arg("l"), py::arg("flag_c_contiguous")=1, py::return_value_policy::reference)
         .def(py::init(
             [](py::buffer b) {
                 py::buffer_info info = b.request();
                 using dtype = typename SpecT<DataIdx>::type;
                 return DeviceArray<dtype>(
-                    static_cast<dtype *>(info.ptr), info.shape
+                    static_cast<dtype *>(info.ptr), info.shape, info.strides
                 );
             }
         ), py::return_value_policy::reference)
@@ -285,7 +301,10 @@ void generate_device_array(py::module & _mod, std::index_sequence<DataIdx ...>) 
             & DeviceArray<typename SpecT<DataIdx>::type>::nbytes
         )
         .def("strides",
-            & DeviceArray<typename SpecT<DataIdx>::type>::strides
+            [](DeviceArray<typename SpecT<DataIdx>::type> & a) {
+                py::object strides = py::cast(a.strides());
+                return strides;
+            }
         )
         .def("last_status",
             [](const DeviceArray<typename SpecT<DataIdx>::type> & a) {
