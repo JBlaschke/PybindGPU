@@ -23,6 +23,20 @@ class DeviceProperties {
 };
 
 
+class DeviceHandle {
+    public:
+        DeviceHandle(int i);
+        ~DeviceHandle();
+
+        nvmlDevice_t & operator* () { return handle; }
+        nvmlDevice_t * get() { return & handle; }
+        nvmlReturn_t last_status() const { return status; }
+    private:
+        nvmlDevice_t handle;
+        nvmlReturn_t status;
+};
+
+
 namespace py = pybind11;
 void generate_device_properties(py::module & m);
 

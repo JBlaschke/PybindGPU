@@ -52,6 +52,8 @@
 #include <cuda_runtime.h>
 #include <cuComplex.h>
 
+#include <nvml.h>
+
 #endif
 
 #endif

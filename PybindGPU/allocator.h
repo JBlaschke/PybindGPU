@@ -37,9 +37,11 @@ class Allocator {
         }
         virtual E allocate(size_t elts) {
             // std::cout << "this is wrong" << std::endl;
+            return E();
         }
         virtual E deallocate() {
             // std::cout << "this is wrong" << std::endl;
+            return E();
         }
         T * ptr() {return _ptr;}
     protected:

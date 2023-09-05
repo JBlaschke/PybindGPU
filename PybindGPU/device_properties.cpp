@@ -28,6 +28,14 @@ DeviceProperties::DeviceProperties(int i) {
 DeviceProperties::~DeviceProperties() {}
 
 
+DeviceHandle::DeviceHandle(int i) {
+    status = nvmlDeviceGetHandleByIndex_v2 (i, & handle);
+}
+
+
+DeviceHandle::~DeviceHandle() {}
+
+
 void generate_device_properties(py::module & m){
     // This needs to be defined so that the ptr_wrapper has something to return
     py::class_<ptr_wrapper<cudaDeviceProp>>(m, "_CudaDeviceProp__ptr");

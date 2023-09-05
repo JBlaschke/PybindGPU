@@ -37,6 +37,28 @@ def find_in_path(name, path):
     return None
 
 
+def validate_paths(name, key, val):
+    if isinstance(val, dict):
+        state = True
+        for k, v in iter(val.items()):
+            state = state and validate_paths(name, k, v)
+        return state
+
+    if isinstance(val, list):
+        state = True
+        for i in val:
+            state = state and validate_paths(name, key, i)
+        return state
+
+    if not os.path.exists(val):
+        logger.critical(
+            f"The {name} {key} path could not be located in {val} -- giving up."
+        )
+        return False
+
+    return True
+
+
 def locate_cuda():
     """
     Locate the CUDA environment on the system Returns a dict with keys 'home',
@@ -62,16 +84,19 @@ def locate_cuda():
 
         home = os.path.dirname(os.path.dirname(nvcc))
 
+    # Resolve NVIDIA lib dir and stubs dir -- add both the the -L dirs
+    lib64_dir = join(home, "lib64")
+    stubs_dir = join(lib64_dir, "stubs")
+    lib_dirs  = [lib64_dir]
+    if os.path.exists(stubs_dir):
+        lib_dirs.append(stubs_dir)
+
     cudaconfig = {"home": home, "nvcc": nvcc,
                   "include": join(home, "include"),
-                  "lib64": join(home, "lib64")}
+                  "lib_dirs": lib_dirs}
 
-    for k, v in iter(cudaconfig.items()):
-        if not os.path.exists(v):
-            logger.critical(
-                f"The CUDA {k} path could not be located in {v} -- giving up."
-            )
-            return None
+    if not validate_paths("CUDA", "", cudaconfig):
+        return None
 
     logger.info("Found a `nvcc` executable.")
     return cudaconfig
@@ -104,13 +129,9 @@ def locate_rocm():
 
     cudaconfig = {"home": home, "hipcc": hipcc,
                   "include": join(home, "include"),
-                  "lib": join(home, "lib")}
+                  "lib_dirs": [join(home, "lib")]}
 
-    for k, v in iter(cudaconfig.items()):
-        if not os.path.exists(v):
-            logger.critical(
-                f"The ROCM {k} path could not be located in {v} -- giving up."
-            )
+    if not validate_paths("ROCM", "", cudaconfig):
             return None
 
     logger.info("Found a `hipcc` executable.")
@@ -220,31 +241,38 @@ def make_extension():
     ]
 
     if BACKEND == BuildType.CUDA:
-        lib_dir = CUDA["lib64"]
-        libraries = ["cudart", "nvToolsExt"]
+        lib_dirs = CUDA["lib_dirs"]
+        libraries = ["cudart", "nvToolsExt", "nvidia-ml"]
         includes.append(CUDA["include"]) 
         extra_compile_args={
-            "gcc": ["-std=c++14", "-O3", "-shared", "-fPIC"],
-            "nvcc": ["-std=c++14", "-O3", "-shared", "--compiler-options",
-                     "-fPIC", "-lnvToolsExt"]
+            "gcc": [
+                "-std=c++14", "-O3", "-shared", "-fPIC"
+            ],
+            "nvcc": [
+                "-std=c++14", "-O3", "-shared", "--compiler-options", "-fPIC"
+            ]
         }
     elif BACKEND == BuildType.ROCM:
-        lib_dir = ROCM["lib"]
+        lib_dirs = ROCM["lib_dirs"]
         libraries = ["amdhip64"]
         includes.append(ROCM["include"])
         extra_compile_args={
-            "gcc": ["-std=c++14", "-O3", "-shared", "-fPIC", "-DUSE_HIP",
-                    "-D__HIP_PLATFORM_AMD__"],
-            "hipcc": ["-std=c++14", "-O3", "-fPIC", "-fgpu-rdc", "-DUSE_HIP",
-                      f"--amdgpu-target={HIP_TARGET}"]
+            "gcc": [
+                "-std=c++14", "-O3", "-shared", "-fPIC", "-DUSE_HIP",
+                "-D__HIP_PLATFORM_AMD__"
+            ],
+            "hipcc": [
+                "-std=c++14", "-O3", "-fPIC", "-fgpu-rdc", "-DUSE_HIP",
+                f"--amdgpu-target={HIP_TARGET}"
+            ]
         }
 
     return Extension(
         "PybindGPU.backend",
         sources,
-        library_dirs=[lib_dir],
+        library_dirs=lib_dirs,
         libraries=libraries,
-        runtime_library_dirs=[lib_dir],
+        runtime_library_dirs=lib_dirs,
         # this syntax is specific to this build system we're only going to use
         # certain compiler args with nvcc and not with gcc the implementation of
         # this trick is in customize_compiler() below
