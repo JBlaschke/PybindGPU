@@ -83,4 +83,32 @@ void generate_device_properties(py::module & m){
                 return CudaError(a.last_status());
             }
         );
+
+    py::class_<DeviceHandle>(m, "nvmlDevice")
+        .def(py::init<int>())
+        .def("get",
+            [](DeviceHandle & a) {
+                return ptr_wrapper<nvmlDevice_t>(a.get());
+            }
+        )
+        .def("last_status",
+            [](const DeviceHandle & a) {
+                return NvmlReturn(a.last_status());
+            }
+        );
+
+    m.def(
+        "nvmlInit",
+        [](){
+            return NvmlReturn(nvmlInit_v2());
+        }
+    );
+
+    m.def(
+        "nvmlShutdown",
+        [](){
+            return NvmlReturn(nvmlShutdown());
+        }
+    );
+
 }
