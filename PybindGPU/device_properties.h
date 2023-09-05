@@ -23,17 +23,17 @@ class DeviceProperties {
 };
 
 
-class DeviceHandle {
+class NvmlDevice {
     public:
-        DeviceHandle(int i);
-        ~DeviceHandle();
+        NvmlDevice(int i);
+        ~NvmlDevice();
 
         nvmlDevice_t & operator* () { return handle; }
         nvmlDevice_t * get() { return & handle; }
-        nvmlReturn_t last_status() const { return status; }
+        // nvmlReturn_t last_status() const { return status; }
+        nvmlReturn_t status;
     private:
         nvmlDevice_t handle;
-        nvmlReturn_t status;
 };
 
 

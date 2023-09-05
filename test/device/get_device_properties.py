@@ -19,8 +19,9 @@ for i in range(n_device):
     print(f" `-pciDomainID = {prop.pciDomainID()}")
 
     nvml_handle = PybindGPU.nvmlDevice(i)
-    print(f"NVML data fro Device {i}:")
-    print(f"{nvml_handle.last_status()}")
+    sm, mem = nvml_handle.utilization_rates()
+    free, total, used = nvml_handle.memory_info()
+    print(f"NVML data for Device {i}: {sm=}, {mem=}, {free=}, {total=}, {used=}")
 
 print("Shutting Down NVML:")
 print(f"{PybindGPU.nvmlShutdown()=}")

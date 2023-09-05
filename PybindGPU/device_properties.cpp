@@ -28,12 +28,12 @@ DeviceProperties::DeviceProperties(int i) {
 DeviceProperties::~DeviceProperties() {}
 
 
-DeviceHandle::DeviceHandle(int i) {
+NvmlDevice::NvmlDevice(int i) {
     status = nvmlDeviceGetHandleByIndex_v2 (i, & handle);
 }
 
 
-DeviceHandle::~DeviceHandle() {}
+NvmlDevice::~NvmlDevice() {}
 
 
 void generate_device_properties(py::module & m){
@@ -84,16 +84,30 @@ void generate_device_properties(py::module & m){
             }
         );
 
-    py::class_<DeviceHandle>(m, "nvmlDevice")
+    py::class_<NvmlDevice>(m, "nvmlDevice")
         .def(py::init<int>())
         .def("get",
-            [](DeviceHandle & a) {
+            [](NvmlDevice & a) {
                 return ptr_wrapper<nvmlDevice_t>(a.get());
             }
         )
+        .def("utilization_rates",
+            [](NvmlDevice & a) {
+                nvmlUtilization_t util;
+                a.status = nvmlDeviceGetUtilizationRates(* a, & util);
+                return py::make_tuple(util.gpu, util.memory);
+            }
+        )
+        .def("memory_info",
+            [](NvmlDevice & a) {
+                nvmlMemory_t mem;
+                a.status = nvmlDeviceGetMemoryInfo(* a, & mem);
+                return py::make_tuple(mem.free, mem.total, mem.used);
+            }
+        )
         .def("last_status",
-            [](const DeviceHandle & a) {
-                return NvmlReturn(a.last_status());
+            [](const NvmlDevice & a) {
+                return NvmlReturn(a.status);
             }
         );
 
